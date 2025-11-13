@@ -1,5 +1,7 @@
-from events import EventQueue
-
+import events
+import pantallas.inicio
+import config
+import display
 
 try:
     import sys
@@ -10,18 +12,17 @@ except ImportError as err:
 
 def main():
     print("hello")
+    
         # Initialise screen
     pygame.init()
-    screen = pygame.display.set_mode((640, 480))
-    pygame.display.set_caption("Basic Pong")
+    pygame.font.init()
+    pygame.display.set_caption("Grandy Grush")
     
-        # Fill background
-    background = pygame.Surface(screen.get_size())
-    background = background.convert()
-    background.fill((0, 0, 0))
-    
-    events = EventQueue()
+    config.font = pygame.font.Font(None, display.text_height())
+    pantallas.inicio.iniciar()
     events.start()
+    pygame.quit()
+    sys.exit()
 
 if __name__ == "__main__":
     main()
