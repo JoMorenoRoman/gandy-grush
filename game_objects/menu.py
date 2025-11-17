@@ -40,7 +40,6 @@ def render():
         pos = text.get_rect(centerx = rect.centerx, y = rect.y + _borde + (display.text_height() * (i * 2 + 1)))
         _layer.append((text, pos))
         events.addCollision(pos, _opciones[i][1])
-    return
 
 def menu_inicio():
     opciones = [
@@ -62,6 +61,6 @@ def menu_resoluciones():
 def menu_partida():
     opciones = [
         ("Continuar", ),
-        ("Abandonar")
+        ("Abandonar", pantallas.juego.iniciar)
     ]
     iniciar(opciones)

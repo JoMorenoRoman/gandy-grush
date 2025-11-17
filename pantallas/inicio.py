@@ -5,6 +5,7 @@ import graphics
 import game_objects.menu as menu
 
 def iniciar():
+    graphics.clear()
     render()
     menu.menu_inicio()
     
