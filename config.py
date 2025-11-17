@@ -1,7 +1,7 @@
 import pygame
 
-BACKGROUND = (255, 255, 255)
+BACKGROUND = (0, 0, 0)
 MAINCOLOR = (50, 150, 255)
 TEXT_COLOR = (100, 100, 100)
-
+MENU_BG = (20, 20, 20)
 font:pygame.font.Font

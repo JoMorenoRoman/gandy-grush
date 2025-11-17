@@ -2,10 +2,12 @@ import events
 import pantallas.inicio
 import config
 import display
+import ctypes
 
 try:
     import sys
     import pygame
+    ctypes.windll.user32.SetProcessDPIAware()
 except ImportError as err:
     print(f"couldn't load module. {err}")
     sys.exit(2)
@@ -13,7 +15,7 @@ except ImportError as err:
 def main():
     print("hello")
     
-        # Initialise screen
+    # Initialise screen
     pygame.init()
     pygame.font.init()
     pygame.display.set_caption("Grandy Grush")
