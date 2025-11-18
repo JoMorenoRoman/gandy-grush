@@ -9,6 +9,8 @@ _tablero:list[list[dict]]
 
 def iniciar():
     graphics.clear()
+    global _tablero
+    _tablero = tablero.iniciar(config.ROWS, config.COLUMNS)
     render()
     graphics.addRenderer(__name__)
 
@@ -28,6 +30,5 @@ def render():
     token_rect = display.createRect(1/config.ROWS, 1/config.COLUMNS, inner[1])
     tokens.render(token_rect.size)
     global _tablero
-    _tablero = tablero.iniciar(config.ROWS, config.COLUMNS)
     tablero.render(_tablero, inner[1], token_rect)
     

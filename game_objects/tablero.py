@@ -1,11 +1,14 @@
 import pygame
 import random
 import display
-import events
+import eventq
 import graphics
-import game_objects.tokens as tokens
+import game_objects.tokens as t
 
 _cardinals = [(-1, 0), (0, 1), (1, 0), (0, -1)]
+STATE = "state"
+TYPE = "type"
+GRAPHIC = "graphic"
 
 def iniciar(rows:int, columns:int):
     matrix:list[list[dict]] = []
@@ -14,9 +17,9 @@ def iniciar(rows:int, columns:int):
         for y in range(columns):
             type = chooseType(matrix, x, y)
             token = {
-                "type": type,
-                "graphic": None,
-                "state": "idle"
+                TYPE: type,
+                GRAPHIC: None,
+                STATE: t.IDLE
                 }
             matrix[x].append(token)
     return matrix
@@ -28,20 +31,53 @@ def render(matrix:list[list[dict]], container:pygame.Rect, token_rect:pygame.Rec
             token = matrix[x][y]
             rect = token_rect.copy()
             display.matrix_align(rect, x, y, container)
-            color = tokens.rendered[token["type"]]
-            token["graphic"] = (color, rect)
-            layer.append(token["graphic"])
-            events.addCollision(token["graphic"][1], lambda: tokens.pick(matrix, x, y))
-    return
+            color = t.rendered[token[TYPE]]
+            token[GRAPHIC] = (color, rect)
+            layer.append(token[GRAPHIC])
+            eventq.addCollision(token[GRAPHIC][1], lambda: select(matrix, x, y))
+    return layer
 
 def chooseType(matrix:list[list[dict]], x:int, y:int):
     invalids = matches(matrix, x, y)
     while True:
-        color = random.randint(0, len(tokens.types) - 1)
+        color = random.randint(0, len(t.types) - 1)
         if color not in invalids:
             break
         
     return color
+
+def select(matrix:list[list[dict]], x:int, y:int):
+    token = matrix[x][y]
+    if token[STATE] == t.BUSY:
+        return
+    elif token[STATE] == t.HIGHLIGHT:
+        try_switch()
+        return
+    elif token[STATE] == t.CANCEL:
+        reset(matrix)
+    
+    token[STATE] = t.SELECT
+    for item in cardinals(matrix, x, y):
+        if item[STATE] == t.IDLE:
+            item[STATE] = t.HIGHLIGHT
+    flagIdles(matrix, t.CANCEL)
+    
+def flagIdles(matrix:list[list[dict]], state:str):
+    for row in matrix:
+        for item in row:
+            if item[STATE] == t.IDLE:
+                item[STATE] = state
+                
+def find(matrix:list[list[dict]], func) -> list[dict]:
+    res:list[dict] = []
+    for row in matrix:
+        for item in row:
+            if func(item):
+                res.append(item)
+    return res
+
+def try_switch():
+    return
 
 def matches(matrix:list[list[dict]], x:int, y:int):
     global _cardinals
@@ -60,11 +96,26 @@ def sonar(matrix:list[list[dict]], x:int, y:int, move_vector:tuple[int, int]):
         y += move_vector[1]
         item = safeIndex(matrix, x, y)
         if item:
-            types.append(item["type"])
+            types.append(item[TYPE])
     if len(types) == 2 and types[0] == types[1]:
         return types[0]
     else:
         return None
+    
+def cardinals(matrix:list[list[dict]], x:int, y:int):
+    global _cardinals
+    res:list[dict] = list()
+    for direction in _cardinals:
+        item = safeIndex(matrix, x + direction[0], y + direction[1])
+        if item:
+            res.append(item)
+    return res
+
+def reset(matrix:list[list[dict]]):
+    for row in matrix:
+        for cell in row:
+            if cell[STATE] != t.BUSY:
+                cell[STATE] = t.IDLE
 
 def safeIndex(matrix:list[list[dict]], x:int, y:int):
     item = None
@@ -74,4 +125,3 @@ def safeIndex(matrix:list[list[dict]], x:int, y:int):
             item = row[y]
         
     return item
-    

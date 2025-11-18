@@ -1,3 +1,5 @@
+import eventq
+import graphics
 import images
 import pygame
 
@@ -8,10 +10,16 @@ types = [
     (0, 255, 255),
     (255, 0, 255),
     (255, 255, 0),
-    (125, 125, 125) 
+    (0, 125, 125) 
 ]
 
 rendered:list[pygame.Surface] = []
+
+IDLE = "idle"
+BUSY = "busy"
+SELECT = "select"
+CANCEL = "cancel"
+HIGHLIGHT = "highlight"
 
 def render(size:tuple[int, int]):
     global rendered, types
@@ -22,6 +30,3 @@ def render(size:tuple[int, int]):
         color = types[i]
         rendered[i] = images.tint_png(image, color)
     
-def pick(matrix:list[list[dict]], x:int, y:int):
-    token = matrix[x][y]
-    token["state"] = "pick"

@@ -1,4 +1,4 @@
-import events
+import eventq
 import pantallas.inicio
 import config
 import display
@@ -22,7 +22,7 @@ def main():
     
     config.font = pygame.font.Font(None, display.text_height())
     pantallas.inicio.iniciar()
-    events.start()
+    eventq.start()
     pygame.quit()
     sys.exit()
 

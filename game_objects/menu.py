@@ -1,6 +1,6 @@
 from typing import Callable
 import pygame
-import events
+import eventq
 import config
 import display
 import pantallas.juego
@@ -39,13 +39,13 @@ def render():
         text = font.render(_opciones[i][0], True, config.TEXT_COLOR)
         pos = text.get_rect(centerx = rect.centerx, y = rect.y + _borde + (display.text_height() * (i * 2 + 1)))
         _layer.append((text, pos))
-        events.addCollision(pos, _opciones[i][1])
+        eventq.addCollision(pos, _opciones[i][1])
 
 def menu_inicio():
     opciones = [
         ("Inicio", pantallas.juego.iniciar),
         ("Cambiar Resolucion", menu_resoluciones),
-        ("Cerrar Juego", events.quit),
+        ("Cerrar Juego", eventq.quit),
     ]
     iniciar(opciones)
     

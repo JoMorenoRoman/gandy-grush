@@ -1,7 +1,7 @@
 import pygame
 import display
 import sys
-import events
+import eventq
 
 _layers:list[list[tuple[pygame.Surface, pygame.Rect]]] = []
 _background:pygame.Surface
@@ -16,10 +16,17 @@ def removeLayer(layer:list[tuple[pygame.Surface, pygame.Rect]]):
     global _layers
     _layers.remove(layer)
     
+def removeGraphic(graphic:tuple[pygame.Surface, pygame.Rect]):
+    global _layers
+    for layer in _layers:
+        if graphic in layer:
+            layer.remove(graphic)
+    
+    
 def clear():
     global _layers
     _layers.clear()
-    events.clearCollisions()
+    eventq.clearCollisions()
     
 def addRenderer(renderer):
     global _renderers
@@ -41,7 +48,7 @@ def renderDisplay():
 def rewriteScreen():
     global _renderers, _layers, _background
     _layers.clear()
-    events.clearCollisions()
+    eventq.clearCollisions()
     for renderer in _renderers:
         sys.modules[renderer].render()
     renderDisplay()
