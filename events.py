@@ -28,7 +28,7 @@ def start():
                     if box[0].collidepoint(pygame.mouse.get_pos()):
                         box[1]()
             elif event.type == pygame.QUIT:
-                break
+                return
             
         for timeFunc in _timed:
             if timeFunc["pause"] and _paused:

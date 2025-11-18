@@ -1,33 +1,70 @@
 import pygame
+import random
+import display
+import events
+import graphics
+import game_objects.tokens as tokens
 
-def iniciar(container:pygame.Rect):
-    weights:list[int] = [0] * 7
-    matrix:list[list[dict]] = [[] * 12]
-    for row in matrix:
-        for col in range(6):
-            row.append({})
+_cardinals = [(-1, 0), (0, 1), (1, 0), (0, -1)]
+
+def iniciar(rows:int, columns:int):
+    matrix:list[list[dict]] = []
+    for x in range(rows):
+        matrix.append([])
+        for y in range(columns):
+            type = chooseType(matrix, x, y)
+            token = {
+                "type": type,
+                "graphic": None,
+                "state": "idle"
+                }
+            matrix[x].append(token)
+    return matrix
+
+def render(matrix:list[list[dict]], container:pygame.Rect, token_rect:pygame.Rect):
+    layer = graphics.addLayer([])
+    for x in range(len(matrix)):
+        for y in range(len(matrix[x])):
+            token = matrix[x][y]
+            rect = token_rect.copy()
+            display.matrix_align(rect, x, y, container)
+            color = tokens.rendered[token["type"]]
+            token["graphic"] = (color, rect)
+            layer.append(token["graphic"])
+            events.addCollision(token["graphic"][1], lambda: tokens.pick(matrix, x, y))
     return
 
-def render():
-    return
-
-def chooseCellColor(matrix:list[list[dict]], weights:list[int], x:int, y:int):
-    return
-    
-def invalidColors(matrix:list[list[dict]], x:int, y:int):
-    
-    return
+def chooseType(matrix:list[list[dict]], x:int, y:int):
+    invalids = matches(matrix, x, y)
+    while True:
+        color = random.randint(0, len(tokens.types) - 1)
+        if color not in invalids:
+            break
+        
+    return color
 
 def matches(matrix:list[list[dict]], x:int, y:int):
-    return
+    global _cardinals
+    matches:set[int] = set()
+    for direction in _cardinals:
+        match = sonar(matrix, x, y, direction)
+        if match:
+            matches.add(match)
     
-def sonar(matrix:list[list[dict]], x:int, y:int, move_x:int, move_y:int):
+    return matches
+    
+def sonar(matrix:list[list[dict]], x:int, y:int, move_vector:tuple[int, int]):
+    types: list[int] = []
     for _ in range(2):
-        x += move_x
-        y += move_y
+        x += move_vector[0]
+        y += move_vector[1]
         item = safeIndex(matrix, x, y)
         if item:
-            color = item["color"]
+            types.append(item["type"])
+    if len(types) == 2 and types[0] == types[1]:
+        return types[0]
+    else:
+        return None
 
 def safeIndex(matrix:list[list[dict]], x:int, y:int):
     item = None

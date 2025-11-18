@@ -4,4 +4,6 @@ BACKGROUND = (0, 0, 0)
 MAINCOLOR = (50, 150, 255)
 TEXT_COLOR = (100, 100, 100)
 MENU_BG = (20, 20, 20)
+ROWS = 8
+COLUMNS = 8
 font:pygame.font.Font
