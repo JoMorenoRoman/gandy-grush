@@ -10,12 +10,10 @@ def set_screen(width:int, height:int):
     graphics.rewriteScreen()
     
 def text_height(): 
-    global screen
     return int(screen.get_height() / 20)
 
 def align(item:pygame.Rect, x_third, y_third, ref:pygame.Rect | None = None):
     if not ref:
-        global screen
         ref = screen.get_rect()
     x_size = ref.w / 6
     x_pos = x_size * (x_third * 2 + 1)
@@ -32,7 +30,6 @@ def matrix_align(rect:pygame.Rect, x_pos, y_pos, container:pygame.Rect):
     
 def createGraphic(x_proportion:float, y_proportion:float, ref:pygame.Rect | None = None):
     if not ref:
-        global screen
         ref = screen.get_rect()
     rect = pygame.Rect(0, 0, ref.w * x_proportion, ref.h * y_proportion)
     surf = pygame.Surface((rect.w, rect.h))

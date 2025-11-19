@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Any
 import pygame
 import eventq
 import config
@@ -6,21 +6,22 @@ import display
 import pantallas.juego
 import graphics
 
-_opciones:list[tuple[str,Callable]]
+_opciones:list[tuple[str, Any]] = []
 _layer:list[tuple[pygame.Surface, pygame.Rect]] = []
 _borde = 20
 
-def iniciar(options:list[tuple[str,Callable]]):
-    global _opciones, _layer
-    _opciones = options
+def iniciar(options:list[tuple[str, Any]]):
+    _opciones.clear()
+    for opt in options:
+        _opciones.append(opt)
     if len(_layer) > 0:
         graphics.removeLayer(_layer)
-        _layer = []
+        _layer.clear()
     render()
     graphics.addRenderer(__name__)
     
 def render():
-    global _opciones
+    _layer.clear()
     height = display.text_height() * (len(_opciones) * 2 + 1)
     max = 0
     for item in _opciones:
@@ -32,8 +33,8 @@ def render():
     surf = pygame.Surface((rect.w, rect.h))
     surf.fill(config.MENU_BG)
     surf.convert()
-    global _layer
-    _layer = graphics.addLayer([(surf, rect)])
+    _layer.append((surf, rect))
+    graphics.addLayer(_layer)
     font = config.font
     for i in range(len(_opciones)):
         text = font.render(_opciones[i][0], True, config.TEXT_COLOR)

@@ -1,25 +1,25 @@
 import pygame
+import config
 import graphics
-from typing import Any, Callable
+import timer
+from typing import Any
 
 _subscribers:dict[int, set] = {}
 _timed:list[dict[str, Any]] = []
-_collisions:list[tuple[pygame.Rect, Callable]] = []
+_collisions:list[tuple[pygame.Rect, Any]] = []
 
-_paused = False
-_pausedCollisions: list[tuple[pygame.Rect, Callable]] = []
+paused = False
+_pausedCollisions: list[tuple[pygame.Rect, Any]] = []
 
 def start():
-    global _paused, _subscribers, _collisions, _timed
     while True:
-        pygame.time.Clock().tick(60)
+        pygame.time.Clock().tick(config.framerate)
         for event in pygame.event.get():
-            if _subscribers.get(event.type) and not _paused:
+            if _subscribers.get(event.type) and not paused:
                 for sub in _subscribers[event.type]:
                     sub(event)
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                global _collisions, _pausedCollisions
-                if _paused:
+                if paused:
                     collisions = _pausedCollisions
                 else:
                     collisions = _collisions
@@ -31,7 +31,7 @@ def start():
                 return
             
         for timeFunc in _timed:
-            if timeFunc["pause"] and _paused:
+            if timeFunc["pause"] and paused:
                 continue
             else:
                 timeFunc["frames"] -= 1
@@ -40,31 +40,26 @@ def start():
         graphics.renderDisplay()
                 
 def subscribe(subscriber, *args):
-    global _subscribers
     for event in args:
         if _subscribers[event]:
             _subscribers[event].add(subscriber)
         else:
             _subscribers.update({event: (subscriber)})
             
-def addTimed(framesToWait:int, callback, shouldPause:bool = True) -> None:
-    global _timed
-    _timed.append({"frames": framesToWait, "callback": callback, "pause": shouldPause})
+def addTimed(seconds:float, callback, shouldPause:bool = True) -> None:
+    _timed.append({"frames": timer.seconds(seconds), "callback": callback, "pause": shouldPause})
     
 def addCollision(rect:pygame.Rect, func):
-    global _collisions
     _collisions.append((rect, func))
     
 def clearCollisions():
-    global _collisions
     _collisions.clear()
     
 def reset():
-    global _subscribers, _timed, _collisions, _pausedCollisions
-    _subscribers = {}
-    _timed = []
-    _collisions = []
-    _pausedCollisions = []
+    _subscribers.clear()
+    _timed.clear()
+    _collisions.clear()
+    _pausedCollisions.clear()
     
 def quit():
     pygame.event.post(pygame.event.Event(pygame.QUIT))

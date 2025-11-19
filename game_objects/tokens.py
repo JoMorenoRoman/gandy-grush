@@ -22,11 +22,10 @@ CANCEL = "cancel"
 HIGHLIGHT = "highlight"
 
 def render(size:tuple[int, int]):
-    global rendered, types
     image = images.load_png("token.png", size)
-    if len(rendered) == 0:
-        rendered = [image] * len(types)
+    if len(rendered) > 0:
+        rendered.clear()
     for i in range(len(types)):
         color = types[i]
-        rendered[i] = images.tint_png(image, color)
+        rendered.append(images.tint_png(image, color))
     

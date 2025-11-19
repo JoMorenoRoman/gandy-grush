@@ -7,4 +7,5 @@ MENU_BG = (20, 20, 20)
 ROWS = 8
 COLUMNS = 8
 
+framerate:int = 60
 font:pygame.font.Font
