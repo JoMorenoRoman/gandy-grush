@@ -1,5 +1,3 @@
-import eventq
-import graphics
 import images
 import pygame
 

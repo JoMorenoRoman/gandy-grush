@@ -1,4 +1,3 @@
-import pygame
 import display
 import graphics
 import config

@@ -9,3 +9,6 @@ COLUMNS = 8
 
 framerate:int = 60
 font:pygame.font.Font
+screen:pygame.Surface = pygame.display.set_mode((800, 600))
+background:pygame.Surface
+ceventsBase:int = pygame.NUMEVENTS + 1

@@ -1,10 +1,9 @@
 import pygame
-import display
+import config
 import sys
 import eventq
 
 _layers:list[list[tuple[pygame.Surface, pygame.Rect]]] = []
-_background:pygame.Surface
 _renderers:list = []
 
 def addLayer(items:list[tuple[pygame.Surface, pygame.Rect]]):
@@ -28,14 +27,13 @@ def addRenderer(renderer):
         _renderers.append(renderer)
     
 def setBackground(background:pygame.Surface):
-    global _background
-    _background = background
+    config.background = background
     
 def renderDisplay():
-    display.screen.blit(_background, (0, 0))
+    config.screen.blit(config.background, (0, 0))
     for layer in _layers:
         for item in layer:
-            display.screen.blit(item[0], item[1])
+            config.screen.blit(item[0], item[1])
     pygame.display.flip()
             
 def rewriteScreen():

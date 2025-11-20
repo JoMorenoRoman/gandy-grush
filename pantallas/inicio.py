@@ -10,7 +10,7 @@ def iniciar():
     menu.menu_inicio()
     
 def render():
-    background = pygame.Surface(display.screen.get_size())
+    background = pygame.Surface(config.screen.get_size())
     background = background.convert()
     background.fill((0, 0, 0))
     graphics.setBackground(background)

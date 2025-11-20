@@ -1,11 +1,8 @@
-import pygame
-
-_base = pygame.NUMEVENTS + 1
+import config
 
 def next():
-    global _base
-    num = _base
-    _base += 1
+    num = config.ceventsBase
+    config.ceventsBase += 1
     return num
 
 SWITCH_TOKENS = next()

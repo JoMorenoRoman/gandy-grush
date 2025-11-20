@@ -4,8 +4,8 @@ import display
 import eventq
 import graphics
 import game_objects.tokens as t
-import timer
 
+# TODO: funcs a snake case
 _cardinals = [(-1, 0), (0, 1), (1, 0), (0, -1)]
 STATE = "state"
 TYPE = "type"
