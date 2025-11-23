@@ -4,6 +4,7 @@ import sys
 import eventq
 
 _layers:list[list[tuple[pygame.Surface, pygame.Rect]]] = []
+_temps:list[tuple[pygame.Surface, pygame.Rect]] = []
 _renderers:list = []
 
 def addLayer(items:list[tuple[pygame.Surface, pygame.Rect]]):
@@ -17,6 +18,9 @@ def removeGraphic(graphic:tuple[pygame.Surface, pygame.Rect]):
     for layer in _layers:
         if graphic in layer:
             layer.remove(graphic)
+            
+def add_temp(graphic:tuple[pygame.Surface, pygame.Rect]):
+    _temps.append(graphic)
     
 def clear():
     _layers.clear()
@@ -34,6 +38,9 @@ def renderDisplay():
     for layer in _layers:
         for item in layer:
             config.screen.blit(item[0], item[1])
+    for item in _temps:
+        config.screen.blit(item[0], item[1])
+    _temps.clear()
     pygame.display.flip()
             
 def rewriteScreen():

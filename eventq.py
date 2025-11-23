@@ -1,4 +1,5 @@
 import pygame
+import animations
 import config
 import graphics
 import timer
@@ -37,7 +38,9 @@ def start():
                 timeFunc["frames"] -= 1
                 if timeFunc["frames"] == 0:
                     timeFunc["callback"]()
+        animations.run_animations()
         graphics.renderDisplay()
+        
                 
 def subscribe(subscriber, *args):
     for event in args:
