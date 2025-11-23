@@ -1,15 +1,26 @@
+from pickle import APPEND
+from sre_parse import State
 import pygame
 import random
+import animations
 import display
 import eventq
 import graphics
 import game_objects.tokens as t
 
 # TODO: funcs a snake case
-_cardinals = [(-1, 0), (0, 1), (1, 0), (0, -1)]
+C_LEFT = (-1, 0)
+C_UP = (0, 1)
+C_RIGHT = (1, 0)
+C_DOWN = (0, -1)
+CARDINALS = [C_LEFT, C_UP, C_RIGHT, C_DOWN]
+
 STATE = "state"
 TYPE = "type"
 GRAPHIC = "graphic"
+BUSY_COUNT = "busy_count"
+POSITION = "position"
+MATRIX = "matrix"
 
 def iniciar(matrix:list[list[dict]], rows:int, columns:int):
     for x in range(rows):
@@ -19,7 +30,10 @@ def iniciar(matrix:list[list[dict]], rows:int, columns:int):
             token = {
                 TYPE: type,
                 GRAPHIC: None,
-                STATE: t.IDLE
+                STATE: t.IDLE,
+                BUSY_COUNT: 0,
+                POSITION: (x, y),
+                MATRIX: matrix
                 }
             matrix[x].append(token)
     return matrix
@@ -84,47 +98,76 @@ def getSelected(matrix:list[list[dict]]):
     return {}
 
 def try_switch(matrix:list[list[dict]], x:int, y:int):
-    token = getSelected(matrix)
+    selected = getSelected(matrix)
     matchTypes = matches(matrix, x, y)
-    if token[TYPE] in matchTypes:
-        switch()
+    if selected[TYPE] in matchTypes:
+        switch(matrix, selected, matrix[x][y])
+        scored = score(matrix, x, y)
+        destroy_and_replace(scored)
         return
     else:
-        reject([token, matrix[x][y]])
-        map = reset(matrix, t.BUSY)
-        # eventq.addTimed(1, )
+        reject([selected, matrix[x][y]])
+        set_busy(matrix)
+        eventq.addTimed(1, lambda: remove_busy(matrix))
     return
 
-def switch():
+def switch(matrix:list[list[dict]], selected:dict, switch:dict):
+    animations.switch_tokens(selected[GRAPHIC], switch[GRAPHIC])
+    
+    matrix[selected[POSITION][0]][selected[POSITION][1]] = switch
+    matrix[switch[POSITION][0]][switch[POSITION][1]] = selected
+    
+    temp = switch[POSITION]
+    switch[POSITION] = selected[POSITION]
+    selected[POSITION] = temp
     return
 
 def reject(rejected:list[dict]):
+    for rej in rejected:
+        animations.shake_token(1, rej[GRAPHIC])
+    return
+
+def score(matrix:list[list[dict]], x:int, y:int):
+    line = matches(matrix, x, y)
+    if len(line) != 4:
+        make_l(line)
+        make_t(line)
+    return line
+
+def destroy_and_replace(scored:list[dict]):
+    for token in scored:
+        animations.destroy_token(token[GRAPHIC])
+    return
+
+def make_l(line:list[dict]):
+    return
+
+def make_t(line:list[dict]):
     return
 
 def matches(matrix:list[list[dict]], x:int, y:int):
-    matches:set[int] = set()
-    for direction in _cardinals:
-        match = sonar(matrix, x, y, direction)
-        if match:
-            matches.add(match)
-    return matches
+    matching = sonar(matrix, x, y, C_LEFT) + [matrix[x][y]] + sonar(matrix, x, y, C_RIGHT)
+    if len(matching) < 3:
+        matching = sonar(matrix, x, y, C_DOWN) + [matrix[x][y]] + sonar(matrix, x, y, C_UP)
+    return matching
     
-def sonar(matrix:list[list[dict]], x:int, y:int, move_vector:tuple[int, int]):
-    types: list[int] = []
-    for _ in range(2):
+def sonar(matrix:list[list[dict]], x:int, y:int, move_vector:tuple[int, int], steps:int|None = 2) -> list[dict]:
+    matching: list[dict] = []
+    if not steps:
+        steps = len(matrix) + len(matrix[0])
+    for _ in range(steps):
         x += move_vector[0]
         y += move_vector[1]
         item = safeIndex(matrix, x, y)
-        if item:
-            types.append(item[TYPE])
-    if len(types) == 2 and types[0] == types[1]:
-        return types[0]
-    else:
-        return None
+        if item and item[TYPE] == matrix[x][y][TYPE]:
+            matching.append(item[TYPE])
+        else:
+            break
+    return matching
     
 def cardinals(matrix:list[list[dict]], x:int, y:int):
     res:list[dict] = list()
-    for direction in _cardinals:
+    for direction in CARDINALS:
         item = safeIndex(matrix, x + direction[0], y + direction[1])
         if item:
             res.append(item)
@@ -141,6 +184,24 @@ def reset(matrix:list[list[dict]], resetTo:str = t.IDLE):
             else:
                 changes.append(False)
     return changes
+
+def set_busy(matrix:list[list[dict]]):
+    for row in matrix:
+        for cell in row:
+            if cell[STATE] == t.BUSY:
+                cell[BUSY_COUNT] += 1
+            else:
+                cell[STATE] = t.BUSY
+                
+def remove_busy(matrix:list[list[dict]]):
+    for row in matrix:
+        for cell in row:
+            if cell[State] == t.BUSY:
+                if cell[BUSY_COUNT] == 0:
+                    cell[STATE] = t.IDLE
+                else:
+                    cell[BUSY_COUNT] -= 1
+                    
 
 def safeIndex(matrix:list[list[dict]], x:int, y:int):
     item = None
