@@ -51,11 +51,11 @@ def shake_token(token:tuple[pygame.Surface, pygame.Rect], state:dict|None = None
         state[ROUND] += 1
     return
 
-def switch_tokens(token1:tuple[pygame.Surface, pygame.Rect], token2:tuple[pygame.Surface, pygame.Rect]):
+def switch_tokens(token1:tuple[pygame.Surface, pygame.Rect], token2:tuple[pygame.Surface, pygame.Rect], duration:float):
     dest1 = (token2[1].x, token2[1].y)
     dest2 = (token1[1].x, token1[1].y)
-    move_token(token1, dest1)
-    move_token(token2, dest2)
+    move_token(token1, dest1, duration)
+    move_token(token2, dest2, duration)
     return
 
 def move_token(token:tuple[pygame.Surface, pygame.Rect], dest:tuple[int, int], duration:float = 0.5, state:dict|None = None):

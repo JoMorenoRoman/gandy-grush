@@ -103,24 +103,23 @@ def getSelected(matrix:list[list[dict]]):
 
 def try_switch(matrix:list[list[dict]], x:int, y:int):
     selected = getSelected(matrix)
-    switch(matrix, selected, matrix[x][y])
+    switch_token = matrix[x][y]
+    switch(matrix, selected, switch_token)
     matching = matches(matrix, x, y)
     if len(matching) > 2:
-        animations.switch_tokens(selected[GRAPHIC], matrix[x][y][GRAPHIC])
-        scored = score(matrix, x, y)
-        destroy(matrix, scored)
-        return
+        duration = 0.5
+        animations.switch_tokens(selected[GRAPHIC], switch_token[GRAPHIC], duration)
+        eventq.addTimed(duration, lambda: buscar_matches(matrix))
     else:
-        switch(matrix, selected, matrix[x][y])
-        reject([selected, matrix[x][y]])
+        switch(matrix, selected, switch_token)
+        reject([selected, switch_token])
         set_busy(matrix)
         eventq.addTimed(1, lambda: remove_busy(matrix))
-    return
 
 def switch(matrix:list[list[dict]], selected:dict, switch:dict):
+    temp = selected[POSITION]
     move_to(matrix, selected, switch[POSITION])
-    move_to(matrix, switch, selected[POSITION])
-    return
+    move_to(matrix, switch, temp)
 
 def move_to(matrix:list[list[dict]], token:dict|None, to:tuple[int, int]):
     matrix[to[0]][to[1]] = token # type: ignore
@@ -215,18 +214,19 @@ def sonar(matrix:list[list[dict]], x:int, y:int, move_vector:tuple[int, int], st
         y += move_vector[1]
         if not in_bound(matrix, (x, y)):
             break
-        
         item = safeIndex(matrix, x, y)
         if item:
             if origin:
                 if origin[TYPE] == item[TYPE]:
                     matching.append(item)
+                else:
+                    break
             else:
                 if len(matching) != 0 and item[TYPE] != matching[0][TYPE]:
                     matching.clear()
                 matching.append(item)
         else:
-            matching.clear()
+            break
     return matching
     
 def cardinals(matrix:list[list[dict]], x:int, y:int):
