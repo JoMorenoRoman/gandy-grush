@@ -1,3 +1,4 @@
+from pickle import FALSE
 import display
 import eventq
 import graphics
@@ -5,14 +6,17 @@ import config
 import game_objects.tokens as tokens
 import game_objects.tablero as tablero
 
-_tablero:list[list[dict]] = []
+_tablero:dict = {}
 _funcs:list[dict] = []
 
 def iniciar():
     graphics.clear()
     _tablero.clear()
     _funcs.clear()
-    tablero.iniciar(_tablero, config.ROWS, config.COLUMNS)
+    _tablero[tablero.MATRIX] = []
+    _tablero[tablero.BUSY] = False
+    _tablero[tablero.ANIM_SPEED] = 0.5
+    tablero.iniciar(_tablero["matrix"], config.ROWS, config.COLUMNS)
     render()
     graphics.addRenderer(__name__)
 
@@ -35,5 +39,6 @@ def render():
     token_rect = display.createRect(1/config.ROWS, 1/config.COLUMNS, inner[1])
     tokens.render(token_rect.size)
     capa_tablero = tablero.render(_tablero, inner[1], token_rect)
+    _funcs.append(eventq.add_frame_func(lambda: tablero.buscar_matches(_tablero)))
     _funcs.append(eventq.add_frame_func(lambda: tablero.fill_empty(_tablero, capa_tablero, inner[1], token_rect)))
     
