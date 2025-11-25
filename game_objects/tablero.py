@@ -1,4 +1,4 @@
-from pickle import APPEND
+from dis import Positions
 from sre_parse import State
 import pygame
 import random
@@ -7,6 +7,7 @@ import display
 import eventq
 import graphics
 import game_objects.tokens as t
+import timer
 
 # TODO: funcs a snake case
 C_LEFT = (-1, 0)
@@ -20,49 +21,60 @@ TYPE = "type"
 GRAPHIC = "graphic"
 BUSY_COUNT = "busy_count"
 POSITION = "position"
-MATRIX = "matrix"
 
 def iniciar(matrix:list[list[dict]], rows:int, columns:int):
     for x in range(rows):
         matrix.append([])
         for y in range(columns):
-            type = chooseType(matrix, x, y)
-            token = {
-                TYPE: type,
-                GRAPHIC: None,
-                STATE: t.IDLE,
-                BUSY_COUNT: 0,
-                POSITION: (x, y),
-                MATRIX: matrix
-                }
-            matrix[x].append(token)
+            matrix[x].append({})
+            crear_token(matrix, x, y)
     return matrix
 
+def crear_token(matrix:list[list[dict]], x:int, y:int):
+    type = chooseType(matrix, x, y)
+    token = {
+        TYPE: type,
+        GRAPHIC: None,
+        STATE: t.IDLE,
+        BUSY_COUNT: 0,
+        POSITION: (x, y)
+        }
+    matrix[x][y] = token
+
 def render(matrix:list[list[dict]], container:pygame.Rect, token_rect:pygame.Rect):
-    layer = graphics.addLayer([])
+    layer = graphics.addLayer([], True)
     for x in range(len(matrix)):
         for y in range(len(matrix[x])):
-            token = matrix[x][y]
-            rect = token_rect.copy()
-            display.matrix_align(rect, x, y, container)
-            color = t.rendered[token[TYPE]]
-            token[GRAPHIC] = (color, rect)
-            layer.append(token[GRAPHIC])
-            eventq.addCollision(token[GRAPHIC][1], lambda: select(matrix, x, y))
+            primer_render_token(matrix, x, y, layer, container, token_rect)
     return layer
-
+# TODO: estan mal los numeros de las posiciones. x e y como los usamos no estan significando lo que son.
+def primer_render_token(matrix:list[list[dict]], x:int, y:int, layer:list, container:pygame.Rect, token_rect:pygame.Rect):
+    token = matrix[x][y]
+    rect = token_rect.copy()
+    display.matrix_align(rect, x, y, container)
+    color = t.rendered[token[TYPE]]
+    token[GRAPHIC] = (color, rect)
+    pos_y = token[GRAPHIC][1].y
+    token[GRAPHIC][1].y -= container.height
+    layer.append(token[GRAPHIC])
+    eventq.addCollision(token[GRAPHIC][1], lambda: select(matrix, x, y))
+    move_token(matrix, token, (token[GRAPHIC][1].x, pos_y))
+    
 def chooseType(matrix:list[list[dict]], x:int, y:int):
-    invalids = matches(matrix, x, y)
+    invalids = set()
+    for card in CARDINALS:
+        matching = sonar(matrix, x, y, card, 2)
+        if len(matching) > 1:
+            invalids.add(matching[0][TYPE])
     while True:
         color = random.randint(0, len(t.types) - 1)
         if color not in invalids:
             break
-        
     return color
 
 def select(matrix:list[list[dict]], x:int, y:int):
     token = matrix[x][y]
-    if token[STATE] == t.BUSY:
+    if token[STATE] == t.BUSY or token[STATE] == t.SCORE:
         return
     elif token[STATE] == t.HIGHLIGHT:
         try_switch(matrix, x, y)
@@ -81,14 +93,6 @@ def flagIdles(matrix:list[list[dict]], state:str):
         for item in row:
             if item[STATE] == t.IDLE:
                 item[STATE] = state
-                
-def find(matrix:list[list[dict]], func) -> list[dict]:
-    res:list[dict] = []
-    for row in matrix:
-        for item in row:
-            if func(item):
-                res.append(item)
-    return res
 
 def getSelected(matrix:list[list[dict]]):
     for row in matrix:
@@ -99,32 +103,34 @@ def getSelected(matrix:list[list[dict]]):
 
 def try_switch(matrix:list[list[dict]], x:int, y:int):
     selected = getSelected(matrix)
-    matchTypes = matches(matrix, x, y)
-    if selected[TYPE] in matchTypes:
-        switch(matrix, selected, matrix[x][y])
+    switch(matrix, selected, matrix[x][y])
+    matching = matches(matrix, x, y)
+    if len(matching) > 2:
+        animations.switch_tokens(selected[GRAPHIC], matrix[x][y][GRAPHIC])
         scored = score(matrix, x, y)
-        destroy_and_replace(scored)
+        destroy(matrix, scored)
         return
     else:
+        switch(matrix, selected, matrix[x][y])
         reject([selected, matrix[x][y]])
         set_busy(matrix)
         eventq.addTimed(1, lambda: remove_busy(matrix))
     return
 
 def switch(matrix:list[list[dict]], selected:dict, switch:dict):
-    animations.switch_tokens(selected[GRAPHIC], switch[GRAPHIC])
-    
-    matrix[selected[POSITION][0]][selected[POSITION][1]] = switch
-    matrix[switch[POSITION][0]][switch[POSITION][1]] = selected
-    
-    temp = switch[POSITION]
-    switch[POSITION] = selected[POSITION]
-    selected[POSITION] = temp
+    move_to(matrix, selected, switch[POSITION])
+    move_to(matrix, switch, selected[POSITION])
     return
+
+def move_to(matrix:list[list[dict]], token:dict|None, to:tuple[int, int]):
+    matrix[to[0]][to[1]] = token # type: ignore
+    if token:
+        matrix[token[POSITION][0]][token[POSITION][1]] = None
+        token[POSITION] = to
 
 def reject(rejected:list[dict]):
     for rej in rejected:
-        animations.shake_token(1, rej[GRAPHIC])
+        animations.shake_token(rej[GRAPHIC])
     return
 
 def score(matrix:list[list[dict]], x:int, y:int):
@@ -132,18 +138,67 @@ def score(matrix:list[list[dict]], x:int, y:int):
     if len(line) != 4:
         make_l(line)
         make_t(line)
+    for token in line:
+        token[STATE] = t.SCORE
     return line
 
-def destroy_and_replace(scored:list[dict]):
+def destroy(matrix:list[list[dict]], scored:list[dict]):
     for token in scored:
         animations.destroy_token(token[GRAPHIC])
+        move_to(matrix, None, token[POSITION])
     return
+
+def fill_empty(matrix:list[list[dict]], layer:list, container:pygame.Rect, token_rect:pygame.Rect):
+    for x in range(len(matrix)):
+        for y in range(len(matrix[x])):
+            if not matrix[x][y]:
+                replacement = fall_replace(matrix, (x, y))
+                if replacement:
+                    busy(matrix, replacement[POSITION])
+                    animations.move_token(replacement[GRAPHIC], (x, y))
+                    move_to(matrix, replacement, (x, y))
+                else:
+                    crear_token(matrix, x, y)
+                    primer_render_token(matrix, x, y, layer, container, token_rect)
+    eventq.addTimed(0.5, lambda: buscar_matches(matrix))
+
+def buscar_matches(matrix:list[list[dict]]):
+    for x in range(len(matrix)):
+        matching = sonar(matrix, x, 0, C_RIGHT)
+        if len(matching) > 2:
+            break
+    if len(matching) < 3:
+        for y in range(len(matrix[0])):
+            matching = sonar(matrix, 0, y, C_UP)
+            if len(matching) > 2:
+                break
+    if len(matching) > 2:
+        pos = matching[0][POSITION]
+        scored = score(matrix, pos[0], pos[1])
+        destroy(matrix, scored)
+                    
+def move_token(matrix:list[list[dict]], token:dict, pos:tuple[int, int]):
+    busy(matrix, token[POSITION])
+    duration = 0.5
+    animations.move_token(token[GRAPHIC], pos, duration)
+    eventq.addTimed(duration, lambda: debusy(matrix, token[POSITION]))
+
+def fall_replace(matrix:list[list[dict]], xy:tuple) -> dict|None:
+    xy = (xy[0], xy[1] + 1)
+    if in_bound(matrix, xy):
+        replacement = safeIndex(matrix, xy[0], xy[1])
+        if replacement and replacement[STATE] != t.SCORE:
+            return replacement
+        else:
+            return fall_replace(matrix, xy)
+    else:
+        return None
 
 def make_l(line:list[dict]):
-    return
+    return line
 
 def make_t(line:list[dict]):
-    return
+    return line
 
 def matches(matrix:list[list[dict]], x:int, y:int):
     matching = sonar(matrix, x, y, C_LEFT) + [matrix[x][y]] + sonar(matrix, x, y, C_RIGHT)
@@ -151,18 +206,28 @@ def matches(matrix:list[list[dict]], x:int, y:int):
         matching = sonar(matrix, x, y, C_DOWN) + [matrix[x][y]] + sonar(matrix, x, y, C_UP)
     return matching
     
-def sonar(matrix:list[list[dict]], x:int, y:int, move_vector:tuple[int, int], steps:int|None = 2) -> list[dict]:
+def sonar(matrix:list[list[dict]], x:int, y:int, move_vector:tuple[int, int], steps:int|None = None) -> list[dict]:
+    origin = safeIndex(matrix, x, y)
     matching: list[dict] = []
     if not steps:
         steps = len(matrix) + len(matrix[0])
     for _ in range(steps):
         x += move_vector[0]
         y += move_vector[1]
-        item = safeIndex(matrix, x, y)
-        if item and item[TYPE] == matrix[x][y][TYPE]:
-            matching.append(item[TYPE])
-        else:
+        if not in_bound(matrix, (x, y)):
             break
+        
+        item = safeIndex(matrix, x, y)
+        if item:
+            if origin:
+                if origin[TYPE] == item[TYPE]:
+                    matching.append(item)
+            else:
+                if len(matching) != 0 and item[TYPE] != matching[0][TYPE]:
+                    matching.clear()
+                matching.append(item)
+        else:
+            matching.clear()
     return matching
     
 def cardinals(matrix:list[list[dict]], x:int, y:int):
@@ -188,26 +253,41 @@ def reset(matrix:list[list[dict]], resetTo:str = t.IDLE):
 def set_busy(matrix:list[list[dict]]):
     for row in matrix:
         for cell in row:
-            if cell[STATE] == t.BUSY:
-                cell[BUSY_COUNT] += 1
-            else:
-                cell[STATE] = t.BUSY
+            busy(matrix, cell[POSITION])
+                
+def busy(matrix:list[list[dict]], xy:tuple):
+    cell = matrix[xy[0]][xy[1]]
+    if cell[STATE] == t.BUSY:
+        cell[BUSY_COUNT] += 1
+    else:
+        cell[STATE] = t.BUSY
+        
+def debusy(matrix:list[list[dict]], pos:tuple):
+    cell = matrix[pos[0]][pos[1]]
+    if cell[BUSY_COUNT] > 0:
+        cell[BUSY_COUNT] -= 1
+    else:
+        if cell[STATE] == t.BUSY:
+            cell[STATE] = t.IDLE
                 
 def remove_busy(matrix:list[list[dict]]):
     for row in matrix:
         for cell in row:
-            if cell[State] == t.BUSY:
+            if cell[STATE] == t.BUSY:
                 if cell[BUSY_COUNT] == 0:
                     cell[STATE] = t.IDLE
                 else:
                     cell[BUSY_COUNT] -= 1
                     
+def in_bound(matrix:list[list[dict]], xy:tuple):
+    res = False
+    if xy[0] < (len(matrix)) and xy[0] >= 0:
+        row = matrix[xy[0]]
+        res = xy[1] <(len(row)) and xy[1] >= 0
+    return res
 
 def safeIndex(matrix:list[list[dict]], x:int, y:int):
     item = None
-    if x < (len(matrix)) and x >= 0:
-        row = matrix[x]
-        if y <(len(row)) and y >= 0:
-            item = row[y]
-        
+    if in_bound(matrix, (x, y)):
+        item = matrix[x][y]
     return item

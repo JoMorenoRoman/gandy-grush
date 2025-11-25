@@ -41,4 +41,10 @@ def square(rect:pygame.Rect):
     else:
         rect = pygame.Rect(rect.left, rect.top, rect.w, rect.w)
     return rect
-    
+
+def make_multiple(rect:pygame.Rect, xMult:int|None, yMult:int|None):
+    while xMult and rect.width % xMult != 0:
+        rect.width -= 1
+        
+    while yMult and rect.height % yMult != 0:
+        rect.height -= 1

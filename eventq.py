@@ -24,20 +24,29 @@ def start():
                     collisions = _pausedCollisions
                 else:
                     collisions = _collisions
-                    
+                # TODO: don't call mouse pos 1000 times
                 for box in collisions:
                     if box[0].collidepoint(pygame.mouse.get_pos()):
                         box[1]()
             elif event.type == pygame.QUIT:
                 return
             
+        removes = []
         for timeFunc in _timed:
             if timeFunc["pause"] and paused:
                 continue
             else:
                 timeFunc["frames"] -= 1
-                if timeFunc["frames"] == 0:
+                if timeFunc["frames"] <= 0:
                     timeFunc["callback"]()
+                    repeat = timeFunc.get("repeat")
+                    if repeat:
+                        timeFunc["frames"] = repeat
+                    else:
+                        removes.append(timeFunc)
+        for remove in removes:
+            _timed.remove(remove)
+                
         animations.run_animations()
         graphics.renderDisplay()
         
@@ -51,6 +60,15 @@ def subscribe(subscriber, *args):
             
 def addTimed(seconds:float, callback, shouldPause:bool = True) -> None:
     _timed.append({"frames": timer.seconds(seconds), "callback": callback, "pause": shouldPause})
+    
+def add_frame_func(callback, shouldPause:bool = True):
+    func = {"frames": 1, "callback": callback, "pause": shouldPause, "repeat": 1}
+    _timed.append(func)
+    return func
+    
+def quitar_frame_func(func:dict):
+    if func in _timed:
+        _timed.remove(func)
     
 def addCollision(rect:pygame.Rect, func):
     _collisions.append((rect, func))

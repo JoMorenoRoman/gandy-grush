@@ -1,19 +1,23 @@
 import display
+import eventq
 import graphics
 import config
 import game_objects.tokens as tokens
 import game_objects.tablero as tablero
 
 _tablero:list[list[dict]] = []
+_funcs:list[dict] = []
 
 def iniciar():
     graphics.clear()
     _tablero.clear()
+    _funcs.clear()
     tablero.iniciar(_tablero, config.ROWS, config.COLUMNS)
     render()
     graphics.addRenderer(__name__)
 
 def render():
+    _funcs.clear()
     outer = display.createRect(0, 2/3)
     outer = display.square(outer)
     outer = display.createGraphic(1, 1, outer)
@@ -21,12 +25,15 @@ def render():
     display.align(outer[1], 1, 1)
     graphics.addLayer([outer])
     
-    inner = display.createGraphic(1, 1, outer[1].inflate(-10, -10))
+    inner = display.createRect(1, 1, outer[1].inflate(-10, -10))
+    display.make_multiple(inner, config.COLUMNS, config.ROWS)
+    inner = display.createGraphic(1, 1, inner)
     inner[0].fill(config.BACKGROUND)
     display.align(inner[1], 1, 1)
     graphics.addLayer([inner])
     
     token_rect = display.createRect(1/config.ROWS, 1/config.COLUMNS, inner[1])
     tokens.render(token_rect.size)
-    tablero.render(_tablero, inner[1], token_rect)
+    capa_tablero = tablero.render(_tablero, inner[1], token_rect)
+    _funcs.append(eventq.add_frame_func(lambda: tablero.fill_empty(_tablero, capa_tablero, inner[1], token_rect)))
     

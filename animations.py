@@ -10,7 +10,7 @@ DURATION = "duration"
 def run_animations():
     removes = []
     for anim in animations:
-        if anim[FRAME] == anim[DURATION]:
+        if anim[FRAME] >= anim[DURATION]:
             removes.append(anim)
             continue
         else:
@@ -20,9 +20,35 @@ def run_animations():
         animations.remove(remove)
     return
 
-def shake_token(seconds:float, graphic:tuple[pygame.Surface, pygame.Rect]):
-    duration = timer.seconds(1)
+ROUND = "round"
+DEST = "dest"
+ORIGIN = "origin"
+def shake_token(token:tuple[pygame.Surface, pygame.Rect], state:dict|None = None):
+    if not state:
+        state = {
+            DURATION: timer.seconds(1) / 3,
+            FRAME: 1,
+            ROUND: 1,
+            ORIGIN: token[1].x
+        }
+        state[CALLBACK] = lambda: shake_token(token, state)
+        animations.append(state)
     
+    if not state.get(DEST):
+        match state[ROUND]:
+            case 1:
+                state[DEST] = (state[ORIGIN] - (token[1].w) / 3, token[1].y)
+            case 2:
+                state[DEST] = (state[ORIGIN] + (token[1].w) / 3, token[1].y)
+            case 3:
+                state[DEST] = (state[ORIGIN], token[1].y)
+                
+    move_token(token, state[DEST], state=state)
+    
+    if state[FRAME] == (state[DURATION] - 1) and state[ROUND] != 3:
+        state[DEST] = None
+        state[FRAME] = 1
+        state[ROUND] += 1
     return
 
 def switch_tokens(token1:tuple[pygame.Surface, pygame.Rect], token2:tuple[pygame.Surface, pygame.Rect]):
@@ -32,13 +58,13 @@ def switch_tokens(token1:tuple[pygame.Surface, pygame.Rect], token2:tuple[pygame
     move_token(token2, dest2)
     return
 
-def move_token(token:tuple[pygame.Surface, pygame.Rect], dest:tuple[int, int], state:dict|None = None):
+def move_token(token:tuple[pygame.Surface, pygame.Rect], dest:tuple[int, int], duration:float = 0.5, state:dict|None = None):
     if not state:
         state = {
-            CALLBACK: lambda: move_token(token, dest, state),
-            DURATION: timer.seconds(0.5), 
+            DURATION: timer.seconds(duration), 
             FRAME: 1
             }
+        state[CALLBACK] = lambda: move_token(token, dest, state=state)
         animations.append(state)
     remaining = state[DURATION] - state[FRAME]
     token[1].x = animate(token[1].x, dest[0], remaining)
@@ -50,13 +76,13 @@ def destroy_token(token:tuple[pygame.Surface, pygame.Rect], state:dict|None = No
     if not state:
         graphics.removeGraphic(token)
         state = {
-            CALLBACK: lambda: destroy_token(token, state),
             DURATION: timer.seconds(0.5),
             FRAME: 1
             }
+        state[CALLBACK] = lambda: destroy_token(token, state)
         animations.append(state)
     
-    if state[CURRENT]:
+    if state.get(CURRENT):
         current = state[CURRENT]
     else:
         current = 0

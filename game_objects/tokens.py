@@ -18,6 +18,7 @@ BUSY = "busy"
 SELECT = "select"
 CANCEL = "cancel"
 HIGHLIGHT = "highlight"
+SCORE = "score"
 
 def render(size:tuple[int, int]):
     image = images.load_png("token.png", size)
