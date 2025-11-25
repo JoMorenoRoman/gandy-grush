@@ -21,9 +21,9 @@ def align(item:pygame.Rect, x_third, y_third, ref:pygame.Rect | None = None):
     item.x = x_pos
     item.y = y_pos
     
-def matrix_align(rect:pygame.Rect, x_pos, y_pos, container:pygame.Rect):
-    rect.x = container.x + (rect.w * x_pos)
-    rect.y = container.y + (rect.h * y_pos)
+def matrix_align(token:pygame.Rect, x_pos, y_pos, container:pygame.Rect):
+    token.x = container.x + (token.w * x_pos)
+    token.y = container.y + (token.h * y_pos)
     
 def createGraphic(x_proportion:float, y_proportion:float, ref:pygame.Rect | None = None):
     if not ref:

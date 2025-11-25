@@ -51,7 +51,7 @@ def render(matrix:list[list[dict]], container:pygame.Rect, token_rect:pygame.Rec
 def primer_render_token(matrix:list[list[dict]], x:int, y:int, layer:list, container:pygame.Rect, token_rect:pygame.Rect):
     token = matrix[x][y]
     rect = token_rect.copy()
-    display.matrix_align(rect, x, y, container)
+    display.matrix_align(rect, x, len(matrix) - y - 1, container)
     color = t.rendered[token[TYPE]]
     token[GRAPHIC] = (color, rect)
     pos_y = token[GRAPHIC][1].y
@@ -125,7 +125,6 @@ def switch(matrix:list[list[dict]], selected:dict, switch:dict):
 def move_to(matrix:list[list[dict]], token:dict|None, to:tuple[int, int]):
     matrix[to[0]][to[1]] = token # type: ignore
     if token:
-        matrix[token[POSITION][0]][token[POSITION][1]] = None
         token[POSITION] = to
 
 def reject(rejected:list[dict]):
@@ -239,16 +238,10 @@ def cardinals(matrix:list[list[dict]], x:int, y:int):
     return res
 
 def reset(matrix:list[list[dict]], resetTo:str = t.IDLE):
-    changes = []
     for row in matrix:
-        changes.append([])
         for cell in row:
-            if cell[STATE] != t.BUSY:
+            if cell[STATE] != t.BUSY and cell[STATE] != t.SCORE:
                 cell[STATE] = resetTo
-                changes.append(True)
-            else:
-                changes.append(False)
-    return changes
 
 def set_busy(matrix:list[list[dict]]):
     for row in matrix:
