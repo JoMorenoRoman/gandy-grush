@@ -63,7 +63,7 @@ def primer_render_token(matrix:list[list[dict]], x:int, y:int, layer:list, conta
 def chooseType(matrix:list[list[dict]], x:int, y:int):
     invalids = set()
     for card in CARDINALS:
-        matching = sonar(matrix, x, y, card, 2)
+        matching = sonar(matrix, x, y, card)
         if len(matching) > 1:
             invalids.add(matching[0][TYPE])
     while True:
@@ -131,11 +131,10 @@ def reject(rejected:list[dict]):
         animations.shake_token(rej[GRAPHIC])
     return
 
-def score(matrix:list[list[dict]], x:int, y:int):
-    line = matches(matrix, x, y)
+def score(matrix:list[list[dict]], line:list[dict]):
     if len(line) != 4:
-        make_l(line)
-        make_t(line)
+        make_l(matrix, line)
+        make_t(matrix, line)
     for token in line:
         token[STATE] = t.SCORE
     return line
@@ -147,8 +146,8 @@ def destroy(matrix:list[list[dict]], scored:list[dict]):
     return
 
 def fill_empty(matrix:list[list[dict]], layer:list, container:pygame.Rect, token_rect:pygame.Rect):
-    for x in range(len(matrix)):
-        for y in range(len(matrix[x])):
+    for y in range(len(matrix[0])):
+        for x in range(len(matrix)):
             if not matrix[x][y]:
                 replacement = fall_replace(matrix, (x, y))
                 if replacement:
@@ -162,17 +161,16 @@ def fill_empty(matrix:list[list[dict]], layer:list, container:pygame.Rect, token
 
 def buscar_matches(matrix:list[list[dict]]):
     for x in range(len(matrix)):
-        matching = sonar(matrix, x, 0, C_RIGHT)
+        matching = find_matching(matrix, x, 0, C_UP)
         if len(matching) > 2:
             break
     if len(matching) < 3:
         for y in range(len(matrix[0])):
-            matching = sonar(matrix, 0, y, C_UP)
+            matching = find_matching(matrix, 0, y, C_RIGHT)
             if len(matching) > 2:
                 break
     if len(matching) > 2:
-        pos = matching[0][POSITION]
-        scored = score(matrix, pos[0], pos[1])
+        scored = score(matrix, matching)
         destroy(matrix, scored)
                     
 def move_token(matrix:list[list[dict]], token:dict, pos:tuple[int, int]):
@@ -192,10 +190,10 @@ def fall_replace(matrix:list[list[dict]], xy:tuple) -> dict|None:
     else:
         return None
 
-def make_l(line:list[dict]):
+def make_l(matrix:list[list[dict]], line:list[dict]):
     return line
 
-def make_t(line:list[dict]):
+def make_t(matrix:list[list[dict]], line:list[dict]):
     return line
 
 def matches(matrix:list[list[dict]], x:int, y:int):
@@ -204,30 +202,52 @@ def matches(matrix:list[list[dict]], x:int, y:int):
         matching = sonar(matrix, x, y, C_DOWN) + [matrix[x][y]] + sonar(matrix, x, y, C_UP)
     return matching
     
-def sonar(matrix:list[list[dict]], x:int, y:int, move_vector:tuple[int, int], steps:int|None = None) -> list[dict]:
-    origin = safeIndex(matrix, x, y)
+def sonar(matrix:list[list[dict]], x:int, y:int, move:tuple[int, int]) -> list[dict]:
+    origin = matrix[x][y]
     matching: list[dict] = []
-    if not steps:
-        steps = len(matrix) + len(matrix[0])
-    for _ in range(steps):
-        x += move_vector[0]
-        y += move_vector[1]
+    for _ in range(2):
+        x += move[0]
+        y += move[1]
         if not in_bound(matrix, (x, y)):
             break
-        item = safeIndex(matrix, x, y)
-        if item:
+        else:
+            token = matrix[x][y]
+            if not token:
+                break
             if origin:
-                if origin[TYPE] == item[TYPE]:
-                    matching.append(item)
+                if token[TYPE] == origin[TYPE]:
+                    matching.append(token)
                 else:
                     break
             else:
-                if len(matching) != 0 and item[TYPE] != matching[0][TYPE]:
+                if len(matching) == 0 or token[TYPE] == matching[0][TYPE]:
+                    matching.append(token)
+                else:
                     matching.clear()
-                matching.append(item)
-        else:
-            break
+                    break
     return matching
+
+def find_matching(matrix:list[list[dict]], x:int, y:int, move:tuple[int, int]):
+    matching = []
+    while in_bound(matrix, (x, y)):
+        token = safeIndex(matrix, x, y)
+        if not token:
+            break
+        if len(matching) == 0:
+            matching.append(token)
+        else:
+            if matching[0][TYPE] == token[TYPE]:
+                matching.append(token)
+            else:
+                if len(matching) > 2:
+                    break
+                else:
+                    matching.clear()
+                    matching.append(token)
+        x += move[0]
+        y += move[1]
+    return matching
+        
     
 def cardinals(matrix:list[list[dict]], x:int, y:int):
     res:list[dict] = list()
