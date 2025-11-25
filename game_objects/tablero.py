@@ -1,4 +1,3 @@
-from os import replace
 import pygame
 import random
 import animations
