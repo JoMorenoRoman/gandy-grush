@@ -1,3 +1,4 @@
+from game_objects.scoretable import agregar_puntaje_historico, limpiar_puntaje
 import pygame
 import animations
 import config
@@ -83,4 +84,6 @@ def reset():
     _pausedCollisions.clear()
     
 def quit():
+    agregar_puntaje_historico()
+    limpiar_puntaje()
     pygame.event.post(pygame.event.Event(pygame.QUIT))

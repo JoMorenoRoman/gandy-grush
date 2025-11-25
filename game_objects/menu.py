@@ -6,6 +6,8 @@ import display
 import pantallas.juego
 import graphics
 
+from utils import convertir_csv_a_matriz, leer_archivo_texto
+
 _opciones:list[tuple[str, Any]] = []
 _layer:list[tuple[pygame.Surface, pygame.Rect]] = []
 _borde = 20
@@ -46,10 +48,26 @@ def menu_inicio():
     opciones = [
         ("Inicio", pantallas.juego.iniciar),
         ("Cambiar Resolucion", menu_resoluciones),
+        ("Puntajes Mas Altos", puntajes_mas_altos),
         ("Cerrar Juego", eventq.quit),
     ]
     iniciar(opciones)
-    
+
+def puntajes_mas_altos():
+    opciones = []
+    datos = leer_archivo_texto("puntajes_historicos.csv")
+    matriz_2 = convertir_csv_a_matriz(datos)
+    for row in matriz_2:
+        nombre = row[0]
+        puntaje = row[1]
+        text = f"{nombre}: {puntaje}"
+        opciones.append((text, noop))
+    opciones.append(("volver", menu_inicio))
+    iniciar(opciones)
+
+def noop():
+    return
+
 def menu_resoluciones():
     opciones = [
         ("800x600", lambda: display.set_screen(800, 600)),
