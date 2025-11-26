@@ -4,6 +4,7 @@ import random
 import animations
 import display
 import eventq
+from game_objects import scoretable
 import graphics
 import game_objects.tokens as t
 
@@ -239,6 +240,7 @@ def score(tablero:dict, line:list[dict]):
         if token[SUPER]:
             super = True
             resolver_super(tablero[MATRIX], token, line)
+    tablero[PUNTAJE] += scoretable.score(len(line))
     if not super and len(line) > 3:
         tablero[NEXT_SUPER] = random.randint(0, len(t.SUPERS) -1)
         

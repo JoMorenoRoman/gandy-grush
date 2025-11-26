@@ -1,3 +1,4 @@
+import secrets
 import pygame
 import config
 import graphics
@@ -9,6 +10,19 @@ def set_screen(width:int, height:int):
     
 def text_height(): 
     return int(config.screen.get_height() / 20)
+
+def centrar_entre(rect:pygame.Rect, xy1:tuple[int, int]|None, xy2:tuple[int, int]|None):
+    screen = config.screen.get_rect()
+    if not xy1:
+        xy1 = (screen.x, screen.y)
+    if not xy2:
+        xy2 = (screen.x, screen.y)
+        
+    area_width  = xy2[0] - xy1[0]
+    area_height = xy2[1] - xy1[1]
+
+    rect.x = xy1[0] + (area_width  - rect.width)  // 2
+    rect.y = xy1[1] + (area_height - rect.height) // 2
 
 def align(item:pygame.Rect, x_third, y_third, ref:pygame.Rect | None = None):
     if not ref:
