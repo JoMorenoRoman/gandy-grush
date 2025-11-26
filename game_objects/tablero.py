@@ -64,7 +64,8 @@ def match_types(matrix:list[list[dict]], x:int, y:int):
         
 def render(tablero:dict, container:pygame.Rect, token_rect:pygame.Rect):
     matrix = tablero[MATRIX]
-    layer = graphics.addLayer([], True)
+    layer = []
+    graphics.addLayer(layer, True)
     set_as_busy(tablero, tablero[ANIM_SPEED])
     for x in range(len(matrix)):
         for y in range(len(matrix[x])):

@@ -16,20 +16,18 @@ def iniciar(options:list[tuple[str, Any]]):
     _opciones.clear()
     for opt in options:
         _opciones.append(opt)
-    if len(_layer) > 0:
-        graphics.removeLayer(_layer)
-        _layer.clear()
     render()
     graphics.addRenderer(__name__)
     
 def render():
     _layer.clear()
+    graphics.removeLayer(_layer)
     height = display.text_height() * (len(_opciones) * 2 + 1)
     max = 0
     for item in _opciones:
         if len(item) > max:
             max = len(item)
-    width = max + (display.text_height() * 3)
+    width = max * display.text_height() * 1.5
     rect = pygame.Rect(0, 0, width, height)
     display.align(rect, 1, 1)
     surf = pygame.Surface((rect.w, rect.h))
@@ -51,6 +49,7 @@ def menu_inicio():
         ("Puntajes Mas Altos", puntajes_mas_altos),
         ("Cerrar Juego", eventq.quit),
     ]
+    eventq.clearCollisions()
     iniciar(opciones)
 
 def puntajes_mas_altos():
@@ -63,6 +62,7 @@ def puntajes_mas_altos():
         text = f"{nombre}: {puntaje}"
         opciones.append((text, noop))
     opciones.append(("volver", menu_inicio))
+    eventq.clearCollisions()
     iniciar(opciones)
 
 def noop():
@@ -75,6 +75,7 @@ def menu_resoluciones():
         ("1920x1080", lambda: display.set_screen(1920, 1080)),
         ("volver", menu_inicio)
     ]
+    eventq.clearCollisions()
     iniciar(opciones)
     
 def menu_partida():

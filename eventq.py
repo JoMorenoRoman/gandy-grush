@@ -26,12 +26,12 @@ def start():
                     collisions = _pausedCollisions
                 else:
                     collisions = _collisions
-                # TODO: don't call mouse pos 1000 times
                 for box in collisions:
                     if box[0].collidepoint(pygame.mouse.get_pos()):
                         _flags.add(IGNORE_MOUSE)
                         addTimed(0.3, lambda: remove_flag(IGNORE_MOUSE))
                         box[1]()
+                        break
             elif event.type == pygame.QUIT:
                 return
             

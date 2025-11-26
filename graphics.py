@@ -1,27 +1,23 @@
-from operator import indexOf
 import pygame
 import config
 import sys
 import eventq
 
 _layers:list[list[tuple[pygame.Surface, pygame.Rect]]] = []
-_clipped:set[int] = set()
+_clipped:list[list[tuple[pygame.Surface, pygame.Rect]]] = []
 _temps:list[tuple[pygame.Surface, pygame.Rect]] = []
 _renderers:list = []
 
-def addLayer(items:list[tuple[pygame.Surface, pygame.Rect]], clipped:bool = False):
-    _layers.append(items)
+def addLayer(layer:list[tuple[pygame.Surface, pygame.Rect]], clipped:bool = False):
+    _layers.append(layer)
     if clipped:
-        _clipped.add(_layers.index(items))
-    return items
+        _clipped.append(layer)
     
 def removeLayer(layer:list[tuple[pygame.Surface, pygame.Rect]]):
-    i = _layers.index(layer)
     if layer in _layers:
-        i = _layers.index(layer)
-        if i in _clipped:
-            _clipped.remove(i)
-        _layers.remove(layer)
+        _layers.remove(layer)    
+    if layer in _clipped:
+        _clipped.remove(layer)
     
 def removeGraphic(graphic:tuple[pygame.Surface, pygame.Rect]):
     for layer in _layers:
@@ -46,7 +42,7 @@ def renderDisplay():
     config.screen.blit(config.background, (0, 0))
     for i in range(len(_layers)):
         layer = _layers[i]
-        if i in _clipped:
+        if i in _clipped and i - 1 >= 0:
             config.screen.set_clip(_layers[i - 1][0][1])
         for item in layer:
             config.screen.blit(item[0], item[1])
