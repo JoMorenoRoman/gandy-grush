@@ -14,15 +14,17 @@ COMIENZO = "comienzo"
 
 def iniciar(duration_sec:int, on_timeout):
     estado.clear()
-    layer.clear()
-    graphics.removeLayer(layer)
+    clear()
     estado[DURACION] = duration_sec
     estado[CALLBACK] = on_timeout
     estado[COMIENZO] = time.time()
-    graphics.addLayer(layer)
-    graphics.addRenderer(__name__)
+    graphics.addRenderer(render, clear)
     render()
-
+    
+def clear():
+    layer.clear()
+    graphics.removeLayer(layer)
+    
 def render():
     layer.clear()
     graphics.addLayer(layer)
@@ -39,6 +41,8 @@ def render():
     texto_reloj()
         
 def texto_reloj():
+    if len(layer) == 0:
+        return
     elapsed = time.time() - estado[COMIENZO]
     remaining = max(0, int(estado[DURACION] - elapsed))
 

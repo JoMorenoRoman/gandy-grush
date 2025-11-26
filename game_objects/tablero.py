@@ -27,6 +27,7 @@ NEXT_SUPER = "next_super"
 PUNTAJE = "puntaje"
 
 def iniciar(matrix:list[list[dict]], rows:int, columns:int):
+    matrix.clear()
     for x in range(rows):
         matrix.append([])
         for y in range(columns):
@@ -81,7 +82,7 @@ def match_types(matrix:list[list[dict]], x:int, y:int, sentido:str|None = None):
         
 def render(tablero:dict, container:pygame.Rect, token_rect:pygame.Rect):
     matrix = tablero[MATRIX]
-    layer = []
+    layer = tablero["capa"]
     graphics.addLayer(layer, True)
     set_as_busy(tablero, tablero[ANIM_SPEED])
     for x in range(len(matrix)):

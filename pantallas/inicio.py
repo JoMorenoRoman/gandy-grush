@@ -1,17 +1,20 @@
 import pygame
 import config
 import display
-import eventq
 import graphics
 import game_objects.menu as menu
 
+graficos = []
+
 def iniciar():
-    eventq.full_reset()
+    clear()
     render()
+    graphics.clearRenderers()
+    graphics.addRenderer(render, clear)
     menu.menu_inicio()
-    graphics.addRenderer(__name__)
     
 def render():
+    clear()
     background = pygame.Surface(config.screen.get_size())
     background = background.convert()
     background.fill((0, 0, 0))
@@ -20,5 +23,12 @@ def render():
     text = font.render("Gandy Grush", True, config.TEXT_COLOR)
     pos = text.get_rect()
     display.align(pos, 1, 0)
-    graphics.addLayer([(text, pos)])
+    graficos.append((text, pos))
+    graphics.addLayer(graficos)
+    
+def clear():
+    if graficos:
+        for graf in graficos:
+            graphics.removeGraphic(graf)
+        graficos.clear()
     
