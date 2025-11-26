@@ -5,7 +5,7 @@ from utils import min, max
 
 def set_screen(width:int, height:int):
     config.screen = pygame.display.set_mode((width, height))
-    graphics.rewriteScreen()
+    graphics.re_render()
     
 def text_height(): 
     return int(config.screen.get_height() / 20)
@@ -14,10 +14,10 @@ def align(item:pygame.Rect, x_third, y_third, ref:pygame.Rect | None = None):
     if not ref:
         ref = config.screen.get_rect()
     x_sixth = ref.w / 6
-    x_pos = ref.x + (x_sixth * (x_third * 2 + 1))
+    x_pos = ref.x + (x_sixth * ((x_third * 2) + 1))
     x_pos -= item.width / 2
     y_sixth = ref.h / 6
-    y_pos = ref.y + (y_sixth * (y_third * 2 + 1))
+    y_pos = ref.y + (y_sixth * ((y_third * 2) + 1))
     y_pos -= item.height / 2
     item.x = x_pos
     item.y = y_pos
@@ -59,8 +59,8 @@ def construir_limite(borde:float, tercio_x:int, tercio_y:int, ref:pygame.Rect|No
     tercio_alto = ref.height / 3
     borde_x = tercio_ancho * borde
     borde_y = tercio_alto * borde
-    x = (tercio_ancho * tercio_x) + borde_x
-    y = (tercio_alto * tercio_y) + borde_y
+    x = ref.x + (tercio_ancho * tercio_x) + borde_x
+    y = ref.y + (tercio_alto * tercio_y) + borde_y
     return pygame.Rect(x, y, tercio_ancho - (borde_x * 2), tercio_alto - (borde_y * 2))
 
 def combinar_limites(lim1:pygame.Rect, lim2:pygame.Rect):

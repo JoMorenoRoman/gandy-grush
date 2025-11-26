@@ -1,12 +1,11 @@
+from typing import Any
 import pygame
 import config
-import sys
-import eventq
 
 _layers:list[list[tuple[pygame.Surface, pygame.Rect]]] = []
 _clipped:list[list[tuple[pygame.Surface, pygame.Rect]]] = []
 _temps:list[tuple[pygame.Surface, pygame.Rect]] = []
-_renderers:list = []
+_renderers:list[tuple[Any, Any]] = []
 
 def addLayer(layer:list[tuple[pygame.Surface, pygame.Rect]], clipped:bool = False):
     _layers.append(layer)
@@ -33,9 +32,19 @@ def reset():
     _temps.clear()
     _renderers.clear()
     
-def addRenderer(renderer):
-    if renderer not in _renderers:
-        _renderers.append(renderer)
+def addRenderer(render, clear):
+    _renderers.append((render, clear))
+        
+def clearRenderers():
+    for render, clear in _renderers:
+        if clear:
+            clear()
+    _renderers.clear()
+    
+def re_render():
+    for render, clear in _renderers:
+        if render:
+            render()
     
 def setBackground(background:pygame.Surface):
     config.background = background
@@ -53,11 +62,4 @@ def renderDisplay():
         config.screen.blit(item[0], item[1])
     _temps.clear()
     pygame.display.flip()
-            
-def rewriteScreen():
-    _layers.clear()
-    eventq.clearCollisions()
-    for renderer in _renderers:
-        sys.modules[renderer].render()
-    renderDisplay()
     

@@ -14,27 +14,29 @@ colisiones:list[tuple[pygame.Rect, Any]] = []
 def iniciar(reiniciar):
     estado.clear()
     estado[REINICIAR] = reiniciar
-    graphics.addRenderer(__name__)
+    graphics.addRenderer(render, clear)
     render()
 
 def render():
-    reset()
-    tercio = display.construir_limite(0, 2, 0)
-    limite = display.combinar_limites(display.construir_limite(0, 0, 1, tercio), display.construir_limite(0, 2, 2, tercio))
+    clear()
+    limite = display.construir_limite(0.25, 2, 0)
     borde = display.createGraphic(1, 1, limite)
     borde[0].fill(config.MAINCOLOR)
-    display.align(borde[1], 1, 1, limite)
+    #display.align(borde[1], 1, 1, limite)
     capa.append(borde)
-    interior = display.createGraphic(1, 1, limite.inflate(-10, -10))
+    interior = display.createGraphic(1, 1, borde[1].inflate(-10, -10))
     interior[0].fill(config.BACKGROUND)
-    display.align(interior[1], 1, 1, borde[1])
+    #display.align(interior[1], 1, 1, borde[1])
     capa.append(interior)
     texto = config.subtitulo.render("Pausa", True, config.TEXT_COLOR)
-    texto = display.encastrar([(texto, texto.get_rect())], display.createRect(0.9, 0.9, interior[1]))[0]
+    texto = display.encastrar([(texto, texto.get_rect())], interior[1])[0]
+    display.align(texto[1], 1, 1, interior[1])
     capa.append(texto)
-    colisiones.append(eventq.addCollision(interior[1], lambda: game_objects.menu.menu_partida(estado[REINICIAR]) ))
     
-def reset():
+    colisiones.append(eventq.addCollision(texto[1], lambda: game_objects.menu.menu_partida(estado[REINICIAR])))
+    graphics.addLayer(capa)
+    
+def clear():
     graphics.removeLayer(capa)
     capa.clear()
     if len(colisiones) > 0:

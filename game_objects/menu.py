@@ -11,6 +11,7 @@ from utils import convertir_csv_a_matriz, leer_archivo_texto
 
 _estado:dict = {}
 _layer:list[tuple[pygame.Surface, pygame.Rect]] = []
+colisiones:list[tuple[pygame.Rect, Any]] = []
 
 OPCIONES = "opciones"
 TITULO = "titulo"
@@ -24,12 +25,22 @@ def iniciar(options:list[tuple[str, Any]], titulo:str|None = None, paused:bool =
     if titulo:
         _estado[TITULO] = titulo
     _estado[PAUSADO] = paused
+    graphics.addRenderer(render, clear)
     render()
-    graphics.addRenderer(__name__)
     
-def render():
+def clear():
     _layer.clear()
     graphics.removeLayer(_layer)
+    for colision in colisiones:
+        eventq.quitar_colision(colision)
+    colisiones.clear()
+    
+def render():
+    clear()
+    if len(colisiones) > 0:
+        for colision in colisiones:
+            eventq.quitar_colision(colision)
+        colisiones.clear()
     opciones = _estado[OPCIONES]
     limite = display.combinar_limites(display.construir_limite(0.1, 1, 1), display.construir_limite(0.1, 1, 2))
     temps = []
@@ -66,16 +77,17 @@ def render():
         colision = opcion[1]
         if colision:
             if _estado[PAUSADO]:
-                eventq.add_paused_collision(graf[1], colision)
+                colisiones.append(eventq.add_paused_collision(graf[1], colision))
             else:
-                eventq.addCollision(graf[1], colision)
+                colisiones.append(eventq.addCollision(graf[1], colision))
                 
 
 def menu_inicio():
+    cerrar()
     opciones = [
-        ("Inicio", pantallas.juego.iniciar),
-        ("Cambiar Resolucion", menu_resoluciones),
-        ("Puntajes Mas Altos", puntajes_mas_altos),
+        ("Inicio", lambda: cerrar(pantallas.juego.iniciar)),
+        ("Cambiar Resolucion", lambda: cerrar(menu_resoluciones)),
+        ("Puntajes Mas Altos", lambda: cerrar(puntajes_mas_altos)),
         ("Cerrar Juego", eventq.quit),
     ]
     eventq.clearCollisions()
@@ -91,7 +103,6 @@ def puntajes_mas_altos():
         text = f"{nombre}: {puntaje}"
         opciones.append((text, None))
     opciones.append(("volver", menu_inicio))
-    eventq.clearCollisions()
     iniciar(opciones)
 
 def menu_resoluciones():
@@ -106,15 +117,20 @@ def menu_resoluciones():
     
 def menu_partida(reiniciar):
     opciones = [
-        ("Continuar", cerrar),
-        ("Reiniciar", reiniciar),
-        ("Abandonar", pantallas.inicio.iniciar)
+        ("Continuar", lambda: cerrar()),
+        ("Reiniciar", lambda: cerrar(reiniciar)),
+        ("Abandonar", lambda: cerrar(pantallas.inicio.iniciar))
     ]
     iniciar(opciones, "Pausa", True)
     
-def cerrar():
-    if _estado[PAUSADO]:
+def cerrar(followup = None):
+    if _estado.get(PAUSADO, None):
         eventq.clear_paused_collisions()
     _estado.clear()
     graphics.removeLayer(_layer)
     _layer.clear()
+    for colision in colisiones:
+        eventq.quitar_colision(colision)
+    colisiones.clear()
+    if followup:
+        followup()

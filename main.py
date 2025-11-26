@@ -20,8 +20,8 @@ def main():
     pygame.font.init()
     pygame.display.set_caption("Grandy Grush")
     
-    config.texto = pygame.font.Font(None, 90)
-    config.subtitulo = pygame.font.Font(None, 135)
+    config.texto = pygame.font.Font(None, 40)
+    config.subtitulo = pygame.font.Font(None, 60)
     pantallas.inicio.iniciar()
     eventq.start()
     pygame.quit()
