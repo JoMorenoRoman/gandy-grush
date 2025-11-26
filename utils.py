@@ -1,3 +1,6 @@
+from typing import Any
+
+
 def guardar_archivo_texto(ruta:str, datos:str)-> None:
     archivo = open(ruta,"w")
     archivo.write(datos)
@@ -21,4 +24,21 @@ def convertir_csv_a_matriz(datos:str|None)->list[list]:
     for i in range(len(lista_filas)):
         lista_columnas = lista_filas[i].split(",")
         matriz.append(lista_columnas)
-    return matriz    
+    return matriz
+
+def min(items:list, access) -> Any:
+    minimo = None
+    for item in items:
+        valor = access(item)
+        if not minimo or valor < minimo:
+            minimo = valor
+    return minimo
+
+def max(items:list, access) -> Any:
+    maximo = None
+    for item in items:
+        valor = access(item)
+        if not maximo or valor > maximo:
+            maximo = valor
+    return maximo
+            

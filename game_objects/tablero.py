@@ -24,6 +24,7 @@ MATRIX = "matrix"
 BUSY = "busy"
 ANIM_SPEED = "animation_speed"
 NEXT_SUPER = "next_super"
+PUNTAJE = "puntaje"
 
 def iniciar(matrix:list[list[dict]], rows:int, columns:int):
     for x in range(rows):

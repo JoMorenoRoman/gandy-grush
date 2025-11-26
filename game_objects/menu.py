@@ -3,44 +3,73 @@ import pygame
 import eventq
 import config
 import display
+import pantallas.inicio
 import pantallas.juego
 import graphics
 
 from utils import convertir_csv_a_matriz, leer_archivo_texto
 
-_opciones:list[tuple[str, Any]] = []
+_estado:dict = {}
 _layer:list[tuple[pygame.Surface, pygame.Rect]] = []
-_borde = 20
 
-def iniciar(options:list[tuple[str, Any]]):
-    _opciones.clear()
+OPCIONES = "opciones"
+TITULO = "titulo"
+PAUSADO = "pausado"
+
+def iniciar(options:list[tuple[str, Any]], titulo:str|None = None, paused:bool = False):
+    _estado.clear()
+    _estado[OPCIONES] = []
     for opt in options:
-        _opciones.append(opt)
+        _estado[OPCIONES].append(opt)
+    if titulo:
+        _estado[TITULO] = titulo
+    _estado[PAUSADO] = paused
     render()
     graphics.addRenderer(__name__)
     
 def render():
     _layer.clear()
     graphics.removeLayer(_layer)
-    height = display.text_height() * (len(_opciones) * 2 + 1)
-    max = 0
-    for item in _opciones:
-        if len(item) > max:
-            max = len(item)
-    width = max * display.text_height() * 1.5
-    rect = pygame.Rect(0, 0, width, height)
-    display.align(rect, 1, 1)
+    opciones = _estado[OPCIONES]
+    limite = display.combinar_limites(display.construir_limite(0.1, 1, 1), display.construir_limite(0.1, 1, 2))
+    temps = []
+    items = []
+    titulo = None
+    if _estado.get(TITULO, None):
+        titulo = config.subtitulo.render(_estado[TITULO], True, config.TEXT_COLOR)
+        titulo = (titulo, titulo.get_rect()) 
+        temps.append(titulo)
+    
+    for opcion in opciones:
+        text = config.texto.render(opcion[0], True, config.TEXT_COLOR)
+        tupla = (text, text.get_rect())
+        temps.append(tupla)
+        items.append(tupla)
+        
+    temps = display.pad(temps, 0.3)
+    display.alinear(temps)
+    refs = display.encastrar(temps, limite)
+    rect = display.crear_container(refs, 0.1)
     surf = pygame.Surface((rect.w, rect.h))
     surf.fill(config.MENU_BG)
     surf.convert()
     _layer.append((surf, rect))
     graphics.addLayer(_layer)
-    font = config.font
-    for i in range(len(_opciones)):
-        text = font.render(_opciones[i][0], True, config.TEXT_COLOR)
-        pos = text.get_rect(centerx = rect.centerx, y = rect.y + _borde + (display.text_height() * (i * 2 + 1)))
-        _layer.append((text, pos))
-        eventq.addCollision(pos, _opciones[i][1])
+    
+    if titulo:
+        _layer.append(refs[0])
+    
+    for i in range(len(opciones)):
+        opcion = opciones[i]
+        graf = refs[temps.index(items[i])]
+        _layer.append(graf)
+        colision = opcion[1]
+        if colision:
+            if _estado[PAUSADO]:
+                eventq.add_paused_collision(graf[1], colision)
+            else:
+                eventq.addCollision(graf[1], colision)
+                
 
 def menu_inicio():
     opciones = [
@@ -60,13 +89,10 @@ def puntajes_mas_altos():
         nombre = row[0]
         puntaje = row[1]
         text = f"{nombre}: {puntaje}"
-        opciones.append((text, noop))
+        opciones.append((text, None))
     opciones.append(("volver", menu_inicio))
     eventq.clearCollisions()
     iniciar(opciones)
-
-def noop():
-    return
 
 def menu_resoluciones():
     opciones = [
@@ -78,9 +104,17 @@ def menu_resoluciones():
     eventq.clearCollisions()
     iniciar(opciones)
     
-def menu_partida():
+def menu_partida(reiniciar):
     opciones = [
-        ("Continuar", ),
-        ("Abandonar", pantallas.juego.iniciar)
+        ("Continuar", cerrar),
+        ("Reiniciar", reiniciar),
+        ("Abandonar", pantallas.inicio.iniciar)
     ]
-    iniciar(opciones)
+    iniciar(opciones, "Pausa", True)
+    
+def cerrar():
+    if _estado[PAUSADO]:
+        eventq.clear_paused_collisions()
+    _estado.clear()
+    graphics.removeLayer(_layer)
+    _layer.clear()

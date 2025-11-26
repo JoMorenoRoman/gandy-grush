@@ -1,24 +1,28 @@
-from pickle import FALSE
 import display
 import eventq
+from game_objects import boton_pausa, reloj
 import graphics
 import config
 import game_objects.tokens as tokens
 import game_objects.tablero as tablero
+import pantallas.nuevo_record
 
 _tablero:dict = {}
 _funcs:list[dict] = []
 
 def iniciar():
-    graphics.clear()
+    #eventq.full_reset()
     _tablero.clear()
-    _funcs.clear()
     _tablero[tablero.MATRIX] = []
     _tablero[tablero.BUSY] = False
     _tablero[tablero.ANIM_SPEED] = 0.5
-    tablero.iniciar(_tablero["matrix"], config.ROWS, config.COLUMNS)
-    render()
+    _tablero[tablero.PUNTAJE] = 0
+    tablero.iniciar(_tablero[tablero.MATRIX], config.ROWS, config.COLUMNS)
+
     graphics.addRenderer(__name__)
+    render()
+    reloj.iniciar(90, lambda: pantallas.nuevo_record.iniciar(_tablero[tablero.PUNTAJE]))
+    boton_pausa.iniciar(iniciar)
 
 def render():
     _funcs.clear()
@@ -41,4 +45,3 @@ def render():
     capa_tablero = tablero.render(_tablero, inner[1], token_rect)
     _funcs.append(eventq.add_frame_func(lambda: tablero.buscar_matches(_tablero)))
     _funcs.append(eventq.add_frame_func(lambda: tablero.fill_empty(_tablero, capa_tablero, inner[1], token_rect)))
-    

@@ -27,9 +27,11 @@ def removeGraphic(graphic:tuple[pygame.Surface, pygame.Rect]):
 def add_temp(graphic:tuple[pygame.Surface, pygame.Rect]):
     _temps.append(graphic)
     
-def clear():
+def reset():
     _layers.clear()
-    eventq.clearCollisions()
+    _clipped.clear()
+    _temps.clear()
+    _renderers.clear()
     
 def addRenderer(renderer):
     if renderer not in _renderers:
@@ -42,7 +44,7 @@ def renderDisplay():
     config.screen.blit(config.background, (0, 0))
     for i in range(len(_layers)):
         layer = _layers[i]
-        if i in _clipped and i - 1 >= 0:
+        if layer in _clipped:
             config.screen.set_clip(_layers[i - 1][0][1])
         for item in layer:
             config.screen.blit(item[0], item[1])
