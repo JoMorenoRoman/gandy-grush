@@ -9,14 +9,13 @@ from typing import Any
 _subscribers:dict[int, set] = {}
 _timed:list[dict[str, Any]] = []
 _collisions:list[tuple[pygame.Rect, Any]] = []
-
-paused = False
 _pausedCollisions: list[tuple[pygame.Rect, Any]] = []
 
 def start():
     while True:
         pygame.time.Clock().tick(config.framerate)
         for event in pygame.event.get():
+            paused = len(_pausedCollisions) > 0
             if _subscribers.get(event.type) and not paused:
                 for sub in _subscribers[event.type]:
                     sub(event)
@@ -76,6 +75,12 @@ def addCollision(rect:pygame.Rect, func):
     
 def clearCollisions():
     _collisions.clear()
+    
+def add_paused_collision(rect:pygame.Rect, func):
+    _pausedCollisions.append((rect, func))
+    
+def clear_paused_collisions():
+    _pausedCollisions.clear()
     
 def reset():
     _subscribers.clear()

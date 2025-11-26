@@ -12,7 +12,9 @@ def leer_archivo_texto(ruta:str)->str|None:
         datos = None
     return datos    
 
-def convertir_csv_a_matriz(datos:str)->list[list]:
+def convertir_csv_a_matriz(datos:str|None)->list[list]:
+    if not datos:
+        return []
     datos_limpios = datos.strip()
     lista_filas = datos_limpios.split("\n")
     matriz = []
