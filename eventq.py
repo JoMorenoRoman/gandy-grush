@@ -10,7 +10,9 @@ _subscribers:dict[int, set] = {}
 _timed:list[dict[str, Any]] = []
 _collisions:list[tuple[pygame.Rect, Any]] = []
 _pausedCollisions: list[tuple[pygame.Rect, Any]] = []
+_flags:set = set()
 
+IGNORE_MOUSE = "no_mouse"
 def start():
     while True:
         pygame.time.Clock().tick(config.framerate)
@@ -19,7 +21,7 @@ def start():
             if _subscribers.get(event.type) and not paused:
                 for sub in _subscribers[event.type]:
                     sub(event)
-            elif event.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEBUTTONDOWN and IGNORE_MOUSE not in _flags:
                 if paused:
                     collisions = _pausedCollisions
                 else:
@@ -27,6 +29,8 @@ def start():
                 # TODO: don't call mouse pos 1000 times
                 for box in collisions:
                     if box[0].collidepoint(pygame.mouse.get_pos()):
+                        _flags.add(IGNORE_MOUSE)
+                        addTimed(0.3, lambda: remove_flag(IGNORE_MOUSE))
                         box[1]()
             elif event.type == pygame.QUIT:
                 return
@@ -50,7 +54,10 @@ def start():
         animations.run_animations()
         graphics.renderDisplay()
         
-                
+def remove_flag(flag:str):
+    if flag in _flags:
+        _flags.remove(flag)
+       
 def subscribe(subscriber, *args):
     for event in args:
         if _subscribers[event]:

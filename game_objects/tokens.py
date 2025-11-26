@@ -14,9 +14,7 @@ types = [
 rendered:list[pygame.Surface] = []
 
 IDLE = "idle"
-BUSY = "busy"
 SELECT = "select"
-CANCEL = "cancel"
 HIGHLIGHT = "highlight"
 SCORE = "score"
 

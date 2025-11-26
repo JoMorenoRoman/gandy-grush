@@ -88,48 +88,43 @@ def primer_render_token(tablero:dict, x:int, y:int, layer:list, container:pygame
     pos_y = token[GRAPHIC][1].y
     token[GRAPHIC][1].y -= container.height
     layer.append(token[GRAPHIC])
-    eventq.addCollision(token[GRAPHIC][1], lambda: select(tablero, x, y))
+    eventq.addCollision(token[GRAPHIC][1], lambda: select(tablero, token))
     animations.move_token(token[GRAPHIC], (token[GRAPHIC][1].x, pos_y), tablero[ANIM_SPEED])
 
-def select(tablero:dict, x:int, y:int):
-    if tablero[BUSY]:
+def select(tablero:dict, token:dict):
+    x = token[POSITION][0]
+    y = token[POSITION][1]
+    matrix:list[list[dict]] = tablero[MATRIX]
+    if tablero[BUSY] or not token or token[STATE] == t.SCORE:
         return
-    matrix = tablero[MATRIX]
-    token = matrix[x][y]
-    if token[STATE] == t.SCORE:
-        return
-    elif token[STATE] == t.HIGHLIGHT:
-        try_switch(tablero, x, y)
-        return
-    elif token[STATE] == t.CANCEL:
-        reset(matrix)
+    match token[STATE]:
+        case t.IDLE:
+            reset(matrix)
+            token[STATE] = t.SELECT
+            for item in cardinals(matrix, x, y):
+                if item[STATE] == t.IDLE:
+                    item[STATE] = t.HIGHLIGHT
+        case t.HIGHLIGHT:
+            try_switch(tablero, x, y)
+            reset(matrix)
+        case t.SELECT | t.SCORE:
+            return
     
-    token[STATE] = t.SELECT
-    for item in cardinals(matrix, x, y):
-        if item[STATE] == t.IDLE:
-            item[STATE] = t.HIGHLIGHT
-    flag_idles(matrix, t.CANCEL)
-    
-def flag_idles(matrix:list[list[dict]], state:str):
-    for row in matrix:
-        for item in row:
-            if item[STATE] == t.IDLE:
-                item[STATE] = state
-
-def get_selected(matrix:list[list[dict]]):
+def reset(matrix:list[list[dict]], resetTo:str = t.IDLE):
     for row in matrix:
         for cell in row:
-            if cell[STATE] == t.SELECT:
-                return cell
-    return {}
+            if cell[STATE] != t.SCORE:
+                cell[STATE] = resetTo
 
 def try_switch(tablero:dict, x:int, y:int):
     matrix = tablero[MATRIX]
     selected = get_selected(matrix)
+    if not selected:
+        reset(matrix)
+        return
     switch_token = matrix[x][y]
     switch(matrix, selected, switch_token)
-    matching = matches(matrix, x, y)
-    if len(matching) > 2:
+    if hay_matches(matrix, [selected, switch_token]):
         set_as_busy(tablero, tablero[ANIM_SPEED])
         animations.switch_tokens(selected[GRAPHIC], switch_token[GRAPHIC], tablero[ANIM_SPEED])
     else:
@@ -138,11 +133,21 @@ def try_switch(tablero:dict, x:int, y:int):
         for rejected in [selected, switch_token]:
             animations.shake_token(rejected[GRAPHIC])
             
-def matches(matrix:list[list[dict]], x:int, y:int):
-    matching = sonar(matrix, x, y, C_LEFT) + [matrix[x][y]] + sonar(matrix, x, y, C_RIGHT)
-    if len(matching) < 3:
-        matching = sonar(matrix, x, y, C_DOWN) + [matrix[x][y]] + sonar(matrix, x, y, C_UP)
-    return matching
+def get_selected(matrix:list[list[dict]]):
+    for row in matrix:
+        for cell in row:
+            if cell[STATE] == t.SELECT:
+                return cell
+    return None
+    
+def hay_matches(matrix:list[list[dict]], tokens:list[dict]):
+    result = False
+    for token in tokens:
+        matching = match_types(matrix, token[POSITION][0], token[POSITION][1])
+        if token[TYPE] in matching:
+            result = True
+            break
+    return result
 
 def switch(matrix:list[list[dict]], selected:dict, switch:dict):
     temp = selected[POSITION]
@@ -154,21 +159,6 @@ def move_to(matrix:list[list[dict]], token:dict|None, to:tuple[int, int]):
     if token:
         token[POSITION] = to
 
-def score(matrix:list[list[dict]], line:list[dict]):
-    if len(line) != 4:
-        make_l(matrix, line)
-        make_t(matrix, line)
-    for token in line:
-        token[STATE] = t.SCORE
-    return line
-
-def destroy(tablero:dict, scored:list[dict]):
-    set_as_busy(tablero, 0.5)
-    for token in scored:
-        animations.destroy_token(token[GRAPHIC])
-        move_to(tablero[MATRIX], None, token[POSITION])
-    return
-
 def fill_empty(tablero:dict, layer:list, container:pygame.Rect, token_rect:pygame.Rect):
     if tablero[BUSY]:
         return
@@ -176,7 +166,7 @@ def fill_empty(tablero:dict, layer:list, container:pygame.Rect, token_rect:pygam
     changes = False
     for y in range(len(matrix[0])):
         for x in range(len(matrix)):
-            if not matrix[x][y]:
+            if not safe_index(matrix,x, y):
                 changes = True
                 replacement = fall_replace(matrix, x, y)
                 if replacement:
@@ -221,36 +211,26 @@ def buscar_matches(tablero:dict):
     if len(matching) > 2:
         scored = score(matrix, matching)
         destroy(tablero, scored)
+        
+def score(matrix:list[list[dict]], line:list[dict]):
+    if len(line) != 4:
+        make_l(matrix, line)
+        make_t(matrix, line)
+    for token in line:
+        token[STATE] = t.SCORE
+    return line
 
 def make_l(matrix:list[list[dict]], line:list[dict]):
     return line
 
 def make_t(matrix:list[list[dict]], line:list[dict]):
     return line
-    
-def sonar(matrix:list[list[dict]], x:int, y:int, move:tuple[int, int]) -> list[dict]:
-    origin = safe_index(matrix, x, y)
-    matching: list[dict] = []
-    for _ in range(2):
-        x += move[0]
-        y += move[1]
-        if not in_bound(matrix, (x, y)):
-            break
-        else:
-            token = safe_index(matrix, x, y)
-            if not token:
-                break
-            if origin:
-                if token[TYPE] == origin[TYPE]:
-                    matching.append(token)
-                else:
-                    break
-            else:
-                if len(matching) == 0 or token[TYPE] == matching[0][TYPE]:
-                    matching.append(token)
-                else:
-                    break
-    return matching
+
+def destroy(tablero:dict, scored:list[dict]):
+    set_as_busy(tablero, 0.5)
+    for token in scored:
+        animations.destroy_token(token[GRAPHIC])
+        move_to(tablero[MATRIX], None, token[POSITION])
 
 def find_matching(matrix:list[list[dict]], x:int, y:int, move:tuple[int, int]):
     matching:list[dict] = []
@@ -280,12 +260,6 @@ def cardinals(matrix:list[list[dict]], x:int, y:int):
         if item:
             res.append(item)
     return res
-
-def reset(matrix:list[list[dict]], resetTo:str = t.IDLE):
-    for row in matrix:
-        for cell in row:
-            if cell[STATE] != t.SCORE:
-                cell[STATE] = resetTo
                     
 def in_bound(matrix:list[list[dict]], xy:tuple):
     res = False
