@@ -1,4 +1,3 @@
-from game_objects.scoretable import agregar_puntaje_historico, limpiar_puntaje
 import pygame
 import animations
 import config
@@ -6,7 +5,7 @@ import graphics
 import timer
 from typing import Any
 
-_subscribers:dict[int, set] = {}
+_subscribers:dict[int, list] = {}
 _timed:list[dict[str, Any]] = []
 _collisions:list[tuple[pygame.Rect, Any]] = []
 _pausedCollisions: list[tuple[pygame.Rect, Any]] = []
@@ -18,7 +17,7 @@ def start():
         pygame.time.Clock().tick(config.framerate)
         for event in pygame.event.get():
             paused = len(_pausedCollisions) > 0
-            if _subscribers.get(event.type) and not paused:
+            if _subscribers.get(event.type, None) and not paused:
                 for sub in _subscribers[event.type]:
                     sub(event)
             elif event.type == pygame.MOUSEBUTTONDOWN and IGNORE_MOUSE not in _flags:
@@ -61,10 +60,10 @@ def remove_flag(flag:str):
        
 def subscribe(subscriber, *args):
     for event in args:
-        if _subscribers[event]:
-            _subscribers[event].add(subscriber)
+        if _subscribers.get(event, None):
+            _subscribers[event].append(subscriber)
         else:
-            _subscribers.update({event: (subscriber)})
+            _subscribers[event] = [subscriber]
             
 def addTimed(seconds:float, callback, shouldPause:bool = True) -> None:
     _timed.append({"frames": timer.seconds(seconds), "callback": callback, "pause": shouldPause})
@@ -113,6 +112,4 @@ def full_reset():
     animations.reset()
     
 def quit():
-    agregar_puntaje_historico()
-    limpiar_puntaje()
     pygame.event.post(pygame.event.Event(pygame.QUIT))

@@ -6,6 +6,7 @@ import graphics
 import config
 import game_objects.tokens as tokens
 import game_objects.tablero as tablero
+import pantallas.inicio
 import pantallas.nuevo_record
 
 _tablero:dict = {}
@@ -13,7 +14,10 @@ _funcs:list[dict] = []
 _capas:list[list[tuple[pygame.Surface, pygame.Rect]]] = []
 
 def iniciar():
-    render()
+    if scoretable.tiene_puntaje():
+        scoretable.agregar_puntaje_historico()
+    else:
+        render()
     
 def render():
     graphics.clearRenderers()
@@ -28,7 +32,7 @@ def render():
     _tablero["capa"] = []
     tablero.iniciar(_tablero[tablero.MATRIX], config.ROWS, config.COLUMNS)
     graphics.addRenderer(render, clear)
-    reloj.iniciar(90, lambda: pantallas.nuevo_record.iniciar(_tablero[tablero.PUNTAJE]))
+    reloj.iniciar(90, lambda: pantallas.inicio.iniciar())
     boton_pausa.iniciar(render)
     _funcs.clear()
     outer = display.createRect(0, 2/3)

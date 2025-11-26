@@ -1,17 +1,21 @@
 import pygame
 import config
 import display
+from game_objects import scoretable
 import graphics
 import game_objects.menu as menu
 
 graficos = []
 
 def iniciar():
-    clear()
-    render()
-    graphics.clearRenderers()
-    graphics.addRenderer(render, clear)
-    menu.menu_inicio()
+    if scoretable.tiene_puntaje():
+        scoretable.agregar_puntaje_historico()
+    else:
+        clear()
+        render()
+        graphics.clearRenderers()
+        graphics.addRenderer(render, clear)
+        menu.menu_inicio()
     
 def render():
     clear()
