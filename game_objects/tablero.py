@@ -19,9 +19,11 @@ TYPE = "type"
 GRAPHIC = "graphic"
 POSITION = "position"
 COLISION = "collition"
+SUPER = "super"
 MATRIX = "matrix"
 BUSY = "busy"
 ANIM_SPEED = "animation_speed"
+NEXT_SUPER = "next_super"
 
 def iniciar(matrix:list[list[dict]], rows:int, columns:int):
     for x in range(rows):
@@ -38,7 +40,8 @@ def crear_token(matrix:list[list[dict]], x:int, y:int):
         GRAPHIC: None,
         STATE: t.IDLE,
         POSITION: (x, y),
-        COLISION: None
+        COLISION: None,
+        SUPER: None
         }
     matrix[x][y] = token
     
@@ -97,7 +100,11 @@ def primer_render_token(tablero:dict, x:int, y:int, layer:list, container:pygame
     token = matrix[x][y]
     rect = token_rect.copy()
     display.matrix_align(matrix, rect, x, y, container)
-    color = t.rendered[token[TYPE]]
+    if tablero.get(NEXT_SUPER, None):
+        token[SUPER] = t.SUPERS[tablero[NEXT_SUPER]]
+        tablero[NEXT_SUPER] = None
+    color = t.graficar_token(token[TYPE], token[SUPER])
+        
     token[GRAPHIC] = (color, rect)
     pos_y = token[GRAPHIC][1].y
     token[GRAPHIC][1].y -= container.height
@@ -219,12 +226,37 @@ def buscar_matches(tablero:dict):
                 break
             
     if len(matching) > 2:
-        score(matrix, matching)
+        score(tablero, matching)
         destroy(tablero, matching)
         
-def score(matrix:list[list[dict]], line:list[dict]):
+def score(tablero:dict, line:list[dict]):
     horizontal = line[0][POSITION][1] == line[1][POSITION][1]
-    agregar_eje_contrario(matrix, line, horizontal)
+    agregar_eje_contrario(tablero[MATRIX], line, horizontal)
+    super = False
+    for token in line:
+        if token[SUPER]:
+            super = True
+            resolver_super(tablero[MATRIX], token, line)
+    if not super and len(line) > 3:
+        tablero[NEXT_SUPER] = random.randint(0, len(t.SUPERS) -1)
+        
+def resolver_super(matrix:list[list[dict]], token:dict, line:list[dict]):
+    match token[SUPER]:
+        case t.BOMB:
+            for x in (-1, 0, 1):
+                for y in (-1, 0, 1):
+                    agregar_super(matrix, pos_x(token) + x, pos_y(token) + y, line)
+        case t.VERTICAL:
+            for y in range(len(matrix[0])):
+                agregar_super(matrix, pos_x(token), y, line)
+        case t.HORIZONTAL:
+            for x in range(len(matrix)):
+                agregar_super(matrix, x, pos_y(token), line)
+                        
+def agregar_super(matrix:list[list[dict]], x:int, y:int, line:list[dict]):
+    target = safe_index(matrix, x, y)
+    if target and target not in line:
+        line.append(target)
 
 def agregar_eje_contrario(matrix:list[list[dict]], line:list[dict], es_horizontal:bool):
     sentido = SENTIDO_H
