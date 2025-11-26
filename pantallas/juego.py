@@ -1,7 +1,7 @@
 import pygame
 import display
 import eventq
-from game_objects import boton_pausa, reloj
+from game_objects import boton_pausa, reloj, scoretable
 import graphics
 import config
 import game_objects.tokens as tokens
@@ -52,6 +52,8 @@ def render():
     token_rect = display.createRect(1/config.ROWS, 1/config.COLUMNS, inner[1])
     tokens.render(token_rect.size)
     tablero.render(_tablero, inner[1], token_rect)
+    scoretable.iniciar(capa[0][1])
+    _funcs.append(eventq.add_frame_func(lambda: scoretable.cambiarPuntaje(_tablero[tablero.PUNTAJE]), False, 15, 15))
     _funcs.append(eventq.add_frame_func(lambda: tablero.buscar_matches(_tablero)))
     _funcs.append(eventq.add_frame_func(lambda: tablero.fill_empty(_tablero, _tablero["capa"], inner[1], token_rect)))
     
