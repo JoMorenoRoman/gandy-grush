@@ -1,13 +1,15 @@
 import pygame
 import config
 import display
+import eventq
 import graphics
 import game_objects.menu as menu
 
 def iniciar():
-    graphics.clear()
+    eventq.full_reset()
     render()
     menu.menu_inicio()
+    graphics.addRenderer(__name__)
     
 def render():
     background = pygame.Surface(config.screen.get_size())
@@ -19,4 +21,4 @@ def render():
     pos = text.get_rect()
     display.align(pos, 1, 0)
     graphics.addLayer([(text, pos)])
-    graphics.addRenderer(__name__)
+    

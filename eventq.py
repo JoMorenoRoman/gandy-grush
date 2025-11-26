@@ -68,10 +68,11 @@ def subscribe(subscriber, *args):
 def addTimed(seconds:float, callback, shouldPause:bool = True) -> None:
     _timed.append({"frames": timer.seconds(seconds), "callback": callback, "pause": shouldPause})
     
-def add_frame_func(callback, shouldPause:bool = True):
-    func = {"frames": 1, "callback": callback, "pause": shouldPause, "repeat": 1}
+def add_frame_func(callback, shouldPause:bool = True, frames:int = 1, repeat:int = 1):
+    func = {"frames": frames, "callback": callback, "pause": shouldPause, "repeat": repeat}
     _timed.append(func)
     return func
+
     
 def quitar_frame_func(func:dict):
     if func in _timed:
@@ -104,6 +105,11 @@ def reset():
     _timed.clear()
     _collisions.clear()
     _pausedCollisions.clear()
+    
+def full_reset():
+    reset()
+    graphics.reset()
+    animations.reset()
     
 def quit():
     agregar_puntaje_historico()

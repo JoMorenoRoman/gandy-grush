@@ -103,3 +103,6 @@ def animate(origin:int, dest:int, interval:int):
 def animate_f(origin:float, dest:float, interval:int, precision:int) -> float:
     result = animate(origin * (10**precision), dest * (10**precision), interval)
     return result / (10**precision)
+
+def reset():
+    animations.clear()
