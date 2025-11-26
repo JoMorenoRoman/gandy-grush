@@ -17,6 +17,15 @@ def start():
     while True:
         pygame.time.Clock().tick(config.framerate)
         for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                quit()
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                pos = event.pos
+                if _pausedCollisions:
+                    for rect, func in _pausedCollisions:
+                        if rect.collidepoint(pos):
+                            func()
+                            break
             paused = len(_pausedCollisions) > 0
             if _subscribers.get(event.type) and not paused:
                 for sub in _subscribers[event.type]:
