@@ -1,3 +1,4 @@
+from typing import Any
 import pygame
 import random
 import animations
@@ -17,6 +18,7 @@ STATE = "state"
 TYPE = "type"
 GRAPHIC = "graphic"
 POSITION = "position"
+COLISION = "collition"
 MATRIX = "matrix"
 BUSY = "busy"
 ANIM_SPEED = "animation_speed"
@@ -35,7 +37,8 @@ def crear_token(matrix:list[list[dict]], x:int, y:int):
         TYPE: type,
         GRAPHIC: None,
         STATE: t.IDLE,
-        POSITION: (x, y)
+        POSITION: (x, y),
+        COLISION: None
         }
     matrix[x][y] = token
     
@@ -47,13 +50,23 @@ def choose_type(matrix:list[list[dict]], x:int, y:int):
             break
     return color
 
-def match_types(matrix:list[list[dict]], x:int, y:int):
+SENTIDO_H = "horizontal"
+SENTIDO_V = "vertical"
+def match_types(matrix:list[list[dict]], x:int, y:int, sentido:str|None = None):
     types = set()
-    for direction in [(1, 0),(0, 1)]:
+    if sentido:
+       if sentido == SENTIDO_H:
+           direcciones = [(1, 0)] 
+       else:
+           direcciones = [(0, 1)]
+    else:
+        direcciones = [(1, 0),(0, 1)]
+        
+    for direccion in direcciones:
         for pairs in [[-2, -1], [-1, 1], [1, 2]]:
             compare = None
             for distance in pairs:
-                item = safe_index(matrix, x + (direction[0] * distance), y + (direction[1] * distance))
+                item = safe_index(matrix, x + (direccion[0] * distance), y + (direccion[1] * distance))
                 if not item:
                     continue
                 if compare and compare[TYPE] == item[TYPE]:
@@ -89,17 +102,17 @@ def primer_render_token(tablero:dict, x:int, y:int, layer:list, container:pygame
     pos_y = token[GRAPHIC][1].y
     token[GRAPHIC][1].y -= container.height
     layer.append(token[GRAPHIC])
-    eventq.addCollision(token[GRAPHIC][1], lambda: select(tablero, token))
+    token[COLISION] = eventq.addCollision(token[GRAPHIC][1], lambda: select(tablero, token))
     animations.move_token(token[GRAPHIC], (token[GRAPHIC][1].x, pos_y), tablero[ANIM_SPEED])
 
 def select(tablero:dict, token:dict):
     x = token[POSITION][0]
     y = token[POSITION][1]
     matrix:list[list[dict]] = tablero[MATRIX]
-    if tablero[BUSY] or not token or token[STATE] == t.SCORE:
+    if tablero[BUSY] or not token:
         return
     match token[STATE]:
-        case t.IDLE:
+        case t.IDLE | t.SELECT:
             reset(matrix)
             token[STATE] = t.SELECT
             for item in cardinals(matrix, x, y):
@@ -108,14 +121,11 @@ def select(tablero:dict, token:dict):
         case t.HIGHLIGHT:
             try_switch(tablero, x, y)
             reset(matrix)
-        case t.SELECT | t.SCORE:
-            return
     
 def reset(matrix:list[list[dict]], resetTo:str = t.IDLE):
     for row in matrix:
         for cell in row:
-            if cell[STATE] != t.SCORE:
-                cell[STATE] = resetTo
+            cell[STATE] = resetTo
 
 def try_switch(tablero:dict, x:int, y:int):
     matrix = tablero[MATRIX]
@@ -171,10 +181,9 @@ def fill_empty(tablero:dict, layer:list, container:pygame.Rect, token_rect:pygam
                 changes = True
                 replacement = fall_replace(matrix, x, y)
                 if replacement:
-                    duration = 0.5
                     dest = token_rect.copy()
                     display.matrix_align(matrix, dest, x, y, container)
-                    animations.move_token(replacement[GRAPHIC], (dest.x, dest.y), duration)
+                    animations.move_token(replacement[GRAPHIC], (dest.x, dest.y), tablero[ANIM_SPEED])
                     moved_from = replacement[POSITION]
                     move_to(matrix, replacement, (x, y))
                     move_to(matrix, None, moved_from)
@@ -188,7 +197,7 @@ def fall_replace(matrix:list[list[dict]], x:int, y:int) -> dict|None:
     y += 1
     if in_bound(matrix, (x, y)):
         replacement = safe_index(matrix, x, y)
-        if replacement and replacement[STATE] != t.SCORE:
+        if replacement:
             return replacement
         else:
             return fall_replace(matrix, x, y)
@@ -210,46 +219,63 @@ def buscar_matches(tablero:dict):
                 break
             
     if len(matching) > 2:
-        scored = score(matrix, matching)
-        destroy(tablero, scored)
+        score(matrix, matching)
+        destroy(tablero, matching)
         
 def score(matrix:list[list[dict]], line:list[dict]):
-    if len(line) != 4:
-        make_l(matrix, line)
-        make_t(matrix, line)
-    for token in line:
-        token[STATE] = t.SCORE
-    return line
+    horizontal = line[0][POSITION][1] == line[1][POSITION][1]
+    agregar_eje_contrario(matrix, line, horizontal)
 
-def make_l(matrix:list[list[dict]], line:list[dict]):
-    return line
+def agregar_eje_contrario(matrix:list[list[dict]], line:list[dict], es_horizontal:bool):
+    sentido = SENTIDO_H
+    if es_horizontal:
+        sentido = SENTIDO_V
+    for token in line.copy():
+        types = match_types(matrix, pos_x(token), pos_y(token), sentido)
+        if token[TYPE] in types:
+            direcciones = [C_LEFT, C_RIGHT]
+            if es_horizontal:
+                direcciones = [C_DOWN, C_UP]
+            for direccion in direcciones:
+                for match in find_matching(matrix, pos_x(token), pos_y(token), direccion, token[TYPE]):
+                    line.append(match)
 
-def make_t(matrix:list[list[dict]], line:list[dict]):
-    return line
+def pos_x(token:dict) -> int: 
+    return token[POSITION][0]
+
+def pos_y(token:dict) -> int: 
+    return token[POSITION][1]
 
 def destroy(tablero:dict, scored:list[dict]):
-    set_as_busy(tablero, 0.5)
+    set_as_busy(tablero, tablero[ANIM_SPEED])
     for token in scored:
-        animations.destroy_token(token[GRAPHIC])
+        animations.destroy_token(token[GRAPHIC], tablero[ANIM_SPEED])
         move_to(tablero[MATRIX], None, token[POSITION])
+        eventq.quitar_colision(token[COLISION])
 
-def find_matching(matrix:list[list[dict]], x:int, y:int, move:tuple[int, int]):
+def find_matching(matrix:list[list[dict]], x:int, y:int, move:tuple[int, int], match_type = None):
     matching:list[dict] = []
     while in_bound(matrix, (x, y)):
         token = safe_index(matrix, x, y)
         if not token:
             break
-        if len(matching) == 0:
-            matching.append(token)
-        else:
-            if matching[0][TYPE] == token[TYPE]:
+        if match_type:
+            if token[TYPE] == match_type:
                 matching.append(token)
             else:
-                if len(matching) > 2:
-                    break
-                else:
-                    matching.clear()
+                break
+        else:
+            if len(matching) == 0:
+                matching.append(token)
+            else:
+                if matching[0][TYPE] == token[TYPE]:
                     matching.append(token)
+                else:
+                    if len(matching) > 2:
+                        break
+                    else:
+                        matching.clear()
+                        matching.append(token)
         x += move[0]
         y += move[1]
     return matching

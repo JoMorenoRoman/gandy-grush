@@ -78,13 +78,23 @@ def quitar_frame_func(func:dict):
         _timed.remove(func)
     
 def addCollision(rect:pygame.Rect, func):
-    _collisions.append((rect, func))
+    colision = (rect, func)
+    _collisions.append(colision)
+    return colision
     
 def clearCollisions():
     _collisions.clear()
     
+def quitar_colision(colision:tuple[pygame.Rect, Any]):
+    if colision in _collisions:
+        _collisions.remove(colision)
+    elif colision in _pausedCollisions:
+        _pausedCollisions.remove(colision)
+    
 def add_paused_collision(rect:pygame.Rect, func):
-    _pausedCollisions.append((rect, func))
+    colision = (rect, func)
+    _pausedCollisions.append(colision)
+    return colision
     
 def clear_paused_collisions():
     _pausedCollisions.clear()

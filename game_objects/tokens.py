@@ -16,7 +16,6 @@ rendered:list[pygame.Surface] = []
 IDLE = "idle"
 SELECT = "select"
 HIGHLIGHT = "highlight"
-SCORE = "score"
 
 def render(size:tuple[int, int]):
     image = images.load_png("token.png", size)
