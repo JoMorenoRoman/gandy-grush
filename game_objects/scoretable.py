@@ -2,18 +2,21 @@ import pygame
 import config
 import display
 import graphics
+from pantallas import nuevo_record
 from utils import guardar_archivo_texto, convertir_csv_a_matriz, leer_archivo_texto
 
 estado:dict = {}
 GRAFS = "grafs"
 REF = "ref"
 POS = "pos"
+PUNTOS = "puntos"
 
 def iniciar(referencia:pygame.Rect):
     clear()
     estado.clear()
     estado[REF] = referencia
     estado[GRAFS] = []
+    estado[PUNTOS] = 0
     graphics.addRenderer(render, clear)
     render()
 
@@ -26,7 +29,7 @@ def render():
     screen = config.screen.get_rect()
     display.centrar_entre(graf, (ref.centerx, ref.bottom), (screen.centerx, screen.bottom))
     
-def clear():
+def clear():        
     if estado.get(GRAFS, None):
         graphics.removeLayer(estado[GRAFS])
         
@@ -40,6 +43,7 @@ def cambiarPuntaje(puntaje:int):
         graphics.removeGraphic(grafs[-1])
         grafs.clear()
     grafs.append(tupla)
+    estado[PUNTOS] = puntaje
 
 def score(n:int):
     if n <= 3:
@@ -48,15 +52,13 @@ def score(n:int):
         puntaje = 3 * 15 + (n - 3) * 30
     return puntaje
 
-def limpiar_puntaje():
-    guardar_archivo_texto("puntaje.csv", '0')
-
-def agregar_puntaje_historico():
-    puntos = leer_archivo_texto("puntaje.csv")
-
+def tiene_puntaje():
+    puntos = estado.get(PUNTOS, None)
+    if not puntos:
+        return
+    
     if puntos == '0':
         return False
-
     datos = leer_archivo_texto("puntajes_historicos.csv")
     matriz = convertir_csv_a_matriz(datos)
 
@@ -71,13 +73,18 @@ def agregar_puntaje_historico():
             entra_al_top_10 = True
 
     # si NO entra → no pedimos nombre
-    if not entra_al_top_10:
-        return False
+    return entra_al_top_10
 
-    # SI ENTRA → PIDO NOMBRE
-    nombre = input("¡Nuevo récord! Por favor, ingresa tu nombre: ")
+def agregar_puntaje_historico():
+    puntos = estado.get(PUNTOS, None)
+    if not puntos:
+        return
+    nuevo_record.iniciar(puntos, guardar)
 
+def guardar(nombre:str, puntos:int):
     # agregamos el nuevo registro
+    datos = leer_archivo_texto("puntajes_historicos.csv")
+    matriz = convertir_csv_a_matriz(datos)
     matriz.append([nombre, str(puntos)])
     burbujeo_descendente(matriz)
 
