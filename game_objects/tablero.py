@@ -241,7 +241,7 @@ def score(tablero:dict, line:list[dict]):
             super = True
             resolver_super(tablero[MATRIX], token, line)
     tablero[PUNTAJE] += scoretable.score(len(line))
-    if not super and len(line) > 3:
+    if not super and len(line) > 2:
         tablero[NEXT_SUPER] = random.randint(0, len(t.SUPERS) -1)
         
 def resolver_super(matrix:list[list[dict]], token:dict, line:list[dict]):

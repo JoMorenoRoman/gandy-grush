@@ -1,8 +1,8 @@
 import eventq
 import pantallas.inicio
-import config
-import display
 import ctypes
+
+import texto
 
 try:
     import sys
@@ -20,8 +20,7 @@ def main():
     pygame.font.init()
     pygame.display.set_caption("Grandy Grush")
     
-    config.texto = pygame.font.Font(None, 40)
-    config.subtitulo = pygame.font.Font(None, 60)
+    texto.init()
     pantallas.inicio.iniciar()
     eventq.start()
     pygame.quit()

@@ -3,6 +3,7 @@ import config
 import display
 import graphics
 from pantallas import nuevo_record
+import texto
 from utils import guardar_archivo_texto, convertir_csv_a_matriz, leer_archivo_texto
 
 estado:dict = {}
@@ -34,8 +35,7 @@ def clear():
         graphics.removeLayer(estado[GRAFS])
         
 def cambiarPuntaje(puntaje:int):
-    text = config.texto.render(str(puntaje), True, config.TEXT_COLOR)
-    tupla = (text, text.get_rect())
+    tupla = texto.normal(str(puntaje))
     tupla[1].centerx = estado[POS].centerx
     tupla[1].centery = estado[POS].centery
     grafs = estado[GRAFS]
@@ -79,7 +79,7 @@ def agregar_puntaje_historico():
     puntos = estado.get(PUNTOS, None)
     if not puntos:
         return
-    nuevo_record.iniciar(puntos, guardar)
+    nuevo_record.iniciar(puntos)
 
 def guardar(nombre:str, puntos:int):
     # agregamos el nuevo registro

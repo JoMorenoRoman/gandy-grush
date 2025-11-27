@@ -1,6 +1,5 @@
 from typing import Any
 
-
 def guardar_archivo_texto(ruta:str, datos:str)-> None:
     archivo = open(ruta,"w")
     archivo.write(datos)

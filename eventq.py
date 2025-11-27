@@ -25,15 +25,15 @@ def start():
                     collisions = _pausedCollisions
                 else:
                     collisions = _collisions
-                for box in collisions:
-                    if box[0].collidepoint(pygame.mouse.get_pos()):
-                        _flags.add(IGNORE_MOUSE)
-                        box[1]()
+                for (box, func) in collisions:
+                    if box.collidepoint(pygame.mouse.get_pos()):
+                        # _flags.add(IGNORE_MOUSE)
+                        func()
             elif event.type == pygame.QUIT:
                 return
             
-        if IGNORE_MOUSE in _flags:
-            addTimed(0.3, lambda: remove_flag(IGNORE_MOUSE), False)
+        # if IGNORE_MOUSE in _flags:
+        #     addTimed(0.3, lambda: quitar_bandera(IGNORE_MOUSE), False)
             
         removes = []
         for timeFunc in _timed:
@@ -51,15 +51,15 @@ def start():
         for remove in removes:
             _timed.remove(remove)
                 
-        animations.run_animations()
-        graphics.renderDisplay()
+        animations.ejecutar()
+        graphics.renderizar()
         
-def remove_flag(flag:str):
+def quitar_bandera(flag:str):
     if flag in _flags:
         _flags.remove(flag)
        
-def subscribe(subscriber, *args):
-    for event in args:
+def subscribe(subscriber, *eventos:int):
+    for event in eventos:
         if _subscribers.get(event, None):
             _subscribers[event].append(subscriber)
         else:
@@ -73,7 +73,6 @@ def add_frame_func(callback, shouldPause:bool = True, frames:int = 1, repeat:int
     _timed.append(func)
     return func
 
-    
 def quitar_frame_func(func:dict):
     if func in _timed:
         _timed.remove(func)
@@ -101,7 +100,7 @@ def clear_paused_collisions():
     _pausedCollisions.clear()
     
 def reset():
-    #_subscribers.clear()
+    _subscribers.clear()
     _timed.clear()
     _collisions.clear()
     _pausedCollisions.clear()
@@ -110,6 +109,12 @@ def full_reset():
     reset()
     graphics.reset()
     animations.reset()
-    
+
+def postear(evento:int, data:dict|None = None):
+    if data:
+        pygame.event.post(pygame.event.Event(evento, data))
+    else:
+        pygame.event.post(pygame.event.Event(evento))
+
 def quit():
     pygame.event.post(pygame.event.Event(pygame.QUIT))

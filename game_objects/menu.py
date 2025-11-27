@@ -7,6 +7,7 @@ import pantallas.inicio
 import pantallas.juego
 import graphics
 
+import texto
 from utils import convertir_csv_a_matriz, leer_archivo_texto
 
 _estado:dict = {}
@@ -47,15 +48,13 @@ def render():
     items = []
     titulo = None
     if _estado.get(TITULO, None):
-        titulo = config.subtitulo.render(_estado[TITULO], True, config.TEXT_COLOR)
-        titulo = (titulo, titulo.get_rect()) 
+        titulo = texto.subtitulo(_estado[TITULO])
         temps.append(titulo)
     
     for opcion in opciones:
-        text = config.texto.render(opcion[0], True, config.TEXT_COLOR)
-        tupla = (text, text.get_rect())
-        temps.append(tupla)
-        items.append(tupla)
+        text = texto.normal(opcion[0])
+        temps.append(text)
+        items.append(text)
         
     temps = display.pad(temps, 0.3)
     display.alinear(temps)
@@ -115,10 +114,10 @@ def menu_resoluciones():
     eventq.clearCollisions()
     iniciar(opciones)
     
-def menu_partida(reiniciar):
+def menu_partida():
     opciones = [
         ("Continuar", lambda: cerrar()),
-        ("Reiniciar", lambda: cerrar(reiniciar)),
+        ("Reiniciar", lambda: cerrar(pantallas.juego.iniciar)),
         ("Abandonar", lambda: cerrar(pantallas.inicio.iniciar))
     ]
     iniciar(opciones, "Pausa", True)
