@@ -1,13 +1,13 @@
 
-from operator import call
 import pygame
 
-from animations import CALLBACK
 import config
 import display
 import eventq
+from game_objects import scoretable
 import graphics
 from pantallas import inicio
+import texto
 
 estado:dict = {}
 GRAFS = "grafs"
@@ -17,9 +17,10 @@ PARAR = "parar"
 PUNTOS = "puntos"
 CALLBACK = "callback"
 
-def iniciar(puntaje:int, callback):
+def iniciar(puntaje:int):
+    eventq.full_reset()
     estado[PUNTOS] = puntaje
-    estado[CALLBACK] = callback
+    estado[CALLBACK] = scoretable.guardar
     render()
     graphics.addRenderer(render, clear)
 
@@ -33,8 +34,7 @@ def render():
     estado[GRAFS].append((background, background.get_rect()))
     text_ref = pygame.Rect(screen.centerx, screen.centery, 10, 10)
     estado[POS] = text_ref
-    titulo = config.subtitulo.render("Felicitaciones! Ingrese su nombre:", True, config.TEXT_COLOR)
-    titulo = (titulo, titulo.get_rect())
+    titulo = texto.titulo("Felicitaciones! Ingrese su nombre:")
     display.centrar_entre(titulo[1], (screen.centerx, screen.top), (text_ref.x, text_ref.y))
     estado[GRAFS].append(titulo)
     eventq.subscribe(borrar, pygame.KEYDOWN)
@@ -44,7 +44,6 @@ def borrar(event):
     if event.key == pygame.K_BACKSPACE:
         estado[TEXT] = estado[TEXT][:-1]
     elif event.key == pygame.K_RETURN:
-        estado[PARAR] = True
         terminar()
     render_text()
 
@@ -55,8 +54,7 @@ def escribir(event):
         
 def render_text():
     text = estado[TEXT]
-    text = config.texto.render(text, True, config.TEXT_COLOR)
-    text = (text, text.get_rect())
+    text = texto.subtitulo(text)
     text[1].centerx = estado[POS].centerx
     text[1].centery = estado[POS].centery
     if len(estado[GRAFS]) > 2:
@@ -65,10 +63,8 @@ def render_text():
         estado[GRAFS].append(text)   
         
 def terminar():
-    if estado[PARAR]:
-        estado[CALLBACK](estado[TEXT], estado[PUNTOS])
-        inicio.iniciar()
-    
+    estado[CALLBACK](estado[TEXT], estado[PUNTOS])
+    inicio.iniciar()
 
 def clear():
     grafs:list|None = estado.get(GRAFS, None)

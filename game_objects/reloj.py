@@ -4,6 +4,7 @@ import config
 import display
 import eventq
 import graphics
+import texto
 import timer
 
 estado= {}
@@ -50,10 +51,7 @@ def texto_reloj():
     secs = remaining % 60
     text = f"{mins:02}:{secs:02}"
     
-    font = config.subtitulo
-    surf_text = font.render(text, True, config.BLANCO)  # texto blanco
-    rect_text = surf_text.get_rect()
-    
+    surf_text, rect_text = texto.subtitulo(text)
     if len(layer) < 3:
         borde = display.createRect(0.9, 0.9, layer[-1][1])
         tupla = (surf_text, rect_text)

@@ -28,7 +28,7 @@ def render(size:tuple[int, int]):
     image = images.load_png("token.png", size)
     for i in range(len(types)):
         color = types[i]
-        _rendered.append(images.tint_png(image, color))
+        _rendered.append(images.colorear_png(image, color))
     for super in SUPERS:
         image = images.load_png(super + ".png", size)
         image.set_alpha(200)

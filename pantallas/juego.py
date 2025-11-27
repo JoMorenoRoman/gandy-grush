@@ -7,23 +7,13 @@ import config
 import game_objects.tokens as tokens
 import game_objects.tablero as tablero
 import pantallas.inicio
-import pantallas.nuevo_record
 
 _tablero:dict = {}
 _funcs:list[dict] = []
 _capas:list[list[tuple[pygame.Surface, pygame.Rect]]] = []
 
 def iniciar():
-    if scoretable.tiene_puntaje():
-        scoretable.agregar_puntaje_historico()
-    else:
-        render()
-    
-def render():
-    graphics.clearRenderers()
-    eventq.reset()
-    if _tablero.get("capa", None):
-        graphics.removeLayer(_tablero["capa"])
+    eventq.full_reset()
     _tablero.clear()
     _tablero[tablero.MATRIX] = []
     _tablero[tablero.BUSY] = False
@@ -32,8 +22,11 @@ def render():
     _tablero["capa"] = []
     tablero.iniciar(_tablero[tablero.MATRIX], config.ROWS, config.COLUMNS)
     graphics.addRenderer(render, clear)
-    reloj.iniciar(90, lambda: pantallas.inicio.iniciar())
-    boton_pausa.iniciar(render)
+    reloj.iniciar(60, lambda: pantallas.inicio.iniciar())
+    boton_pausa.iniciar()
+    render()
+    
+def render():
     _funcs.clear()
     outer = display.createRect(0, 2/3)
     outer = display.square(outer)

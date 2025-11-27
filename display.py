@@ -1,15 +1,13 @@
-import secrets
 import pygame
 import config
 import graphics
+import texto
 from utils import min, max
 
 def set_screen(width:int, height:int):
     config.screen = pygame.display.set_mode((width, height))
+    texto.reset()
     graphics.re_render()
-    
-def text_height(): 
-    return int(config.screen.get_height() / 20)
 
 def centrar_entre(rect:pygame.Rect, xy1:tuple[int, int]|None, xy2:tuple[int, int]|None):
     screen = config.screen.get_rect()
