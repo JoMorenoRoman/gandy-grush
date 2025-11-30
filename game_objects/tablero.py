@@ -193,7 +193,7 @@ def fill_empty(tablero:dict, layer:list, container:pygame.Rect, token_rect:pygam
                 if replacement:
                     dest = token_rect.copy()
                     display.matrix_align(matrix, dest, x, y, container)
-                    animations.move_token(replacement[GRAPHIC], (dest.x, dest.y), tablero[ANIM_SPEED])
+                    animations.move_token(replacement[GRAPHIC], (dest.x, dest.y), tablero[ANIM_SPEED] % 2)
                     moved_from = replacement[POSITION]
                     move_to(matrix, replacement, (x, y))
                     move_to(matrix, None, moved_from)

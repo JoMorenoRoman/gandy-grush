@@ -1,9 +1,8 @@
 ## TODO
 - Imagen de fondo (juego y menu principal)
 - Musica de fondo
-- Temporizador solo en segundos
 - Guardar estado de partida si se abandona
-- Ranking debe ser visible y ocupar la mayor aprte de la pantalla
+- Ranking debe ser visible y ocupar la mayor parte de la pantalla
 - Generar combos en cadena automaticos
 - Arreglar comodin faltante o cambiar por variador de color (cicla por los colores disponibles y cuando se clickea rompe todas las piezas del mismo color)
 - Validar que existan jugadas posibles y reiniciar el tablero si no es el caso

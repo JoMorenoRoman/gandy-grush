@@ -13,10 +13,9 @@ DURACION = "duracion"
 CALLBACK = "callback"
 COMIENZO = "comienzo"
 
-def iniciar(duration_sec:int, on_timeout):
+def iniciar(segundos:int, on_timeout):
     estado.clear()
-    clear()
-    estado[DURACION] = duration_sec
+    estado[DURACION] = segundos
     estado[CALLBACK] = on_timeout
     estado[COMIENZO] = time.time()
     graphics.addRenderer(render, clear)
@@ -27,7 +26,7 @@ def clear():
     graphics.removeLayer(layer)
     
 def render():
-    layer.clear()
+    clear()
     graphics.addLayer(layer)
     limite = display.construir_limite(0.3, 0, 0)
     borde = display.createGraphic(0.7, 0.7, limite)
@@ -44,12 +43,11 @@ def render():
 def texto_reloj():
     if len(layer) == 0:
         return
+    
     elapsed = time.time() - estado[COMIENZO]
     remaining = max(0, int(estado[DURACION] - elapsed))
 
-    mins = remaining // 60
-    secs = remaining % 60
-    text = f"{mins:02}:{secs:02}"
+    text = f"{remaining:02}"
     
     surf_text, rect_text = texto.subtitulo(text)
     if len(layer) < 3:
