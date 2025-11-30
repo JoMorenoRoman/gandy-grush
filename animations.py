@@ -1,3 +1,4 @@
+import math
 import pygame
 import graphics
 import timer
@@ -74,11 +75,12 @@ def move_token(token:tuple[pygame.Surface, pygame.Rect], dest:tuple[int, int], d
 ACTUAL = "actual"
 def destroy_token(token:tuple[pygame.Surface, pygame.Rect], duracion:float = 0.5, state:dict|None = None):
     if not state:
-        graphics.removeGraphic(token)
         state = {
             DURACION: timer.seconds(duracion),
-            FRAME: 1
+            FRAME: 1,
+            LAYER: graphics.buscar_capa(token)
             }
+        graphics.removeGraphic(token)
         state[CALLBACK] = lambda: destroy_token(token, duracion, state)
         animaciones.append(state)
     
@@ -93,10 +95,33 @@ def destroy_token(token:tuple[pygame.Surface, pygame.Rect], duracion:float = 0.5
     size = surf.get_size()
     size = (mover_lineal(size[0], 0, remaining), mover_lineal(size[1], 0, remaining))
     surf = pygame.transform.smoothscale(surf, size)
-    graphics.add_temp((surf, token[1]))
+    graphics.add_temp((surf, token[1]), state[LAYER])
     state[ACTUAL] = rotacion
     return
 
+LAYER = "layer"
+def titilar(token:tuple[pygame.Surface, pygame.Rect], duracion:float = 0.5, max_brillo:int = 60, estado:dict|None = None):
+    if not estado:
+        estado = {
+            DURACION: timer.seconds(duracion),
+            FRAME: 1,
+            LAYER: graphics.buscar_capa(token)
+        }
+        estado[CALLBACK] = lambda: titilar(token, duracion, max_brillo, estado)
+        animaciones.append(estado)
+    
+    progreso = round(mover_curvo(max_brillo, estado[FRAME], estado[DURACION]))
+    temp:pygame.Surface = token[0].copy()
+    temp.fill((progreso, progreso, progreso), special_flags=pygame.BLEND_RGB_ADD)
+    graphics.add_temp((temp, token[1]), estado[LAYER])
+    
+    return estado
+    
+def mover_curvo(final:int, frame_actual:int, frame_final:int):
+    progreso = 1 - (frame_actual / frame_final)
+    curvado = math.sin(progreso * math.pi)
+    return final * curvado
+    
 def mover_lineal(origin:int, dest:int, interval:int):
     return origin + round((dest - origin) / interval)
 

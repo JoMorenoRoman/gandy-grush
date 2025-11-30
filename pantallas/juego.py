@@ -1,4 +1,5 @@
 import pygame
+import animations
 import display
 import eventq
 from game_objects import boton_pausa, reloj, scoretable
@@ -7,6 +8,7 @@ import config
 import game_objects.tokens as tokens
 import game_objects.tablero as tablero
 import pantallas.inicio
+import timer
 
 _tablero:dict = {}
 _funcs:list[dict] = []
@@ -53,6 +55,14 @@ def render():
     _funcs.append(eventq.add_frame_func(lambda: scoretable.cambiarPuntaje(_tablero[tablero.PUNTAJE]), False, 15, 15))
     _funcs.append(eventq.add_frame_func(lambda: tablero.buscar_matches(_tablero)))
     _funcs.append(eventq.add_frame_func(lambda: tablero.fill_empty(_tablero, _tablero["capa"], inner[1], token_rect)))
+    duracion = timer.seconds(0.35)
+    _funcs.append(eventq.add_frame_func(lambda: titilar(_tablero[tablero.MATRIX], 0.35), True, duracion, duracion))
+    
+def titilar(matrix:list[list[dict]], duracion:float):
+    for row in matrix:
+        for token in row:
+            if token and token[tablero.STATE] == tokens.HIGHLIGHT:
+                animations.titilar(token[tablero.GRAPHIC], duracion, 240)
     
 def clear():
     if _capas:
