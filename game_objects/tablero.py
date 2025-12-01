@@ -1,4 +1,4 @@
-from typing import Any
+import time
 import pygame
 import random
 import animations
@@ -26,14 +26,22 @@ BUSY = "busy"
 ANIM_SPEED = "animation_speed"
 NEXT_SUPER = "next_super"
 PUNTAJE = "puntaje"
+ULTIMO_CLICK = "ultimo_click"
 
-def iniciar(matrix:list[list[dict]], rows:int, columns:int):
+def iniciar(matrix:list[list[dict]], rows:int, columns:int, imposible:bool = False):
     matrix.clear()
     for x in range(rows):
         matrix.append([])
         for y in range(columns):
             matrix[x].append({})
             crear_token(matrix, x, y)
+    if imposible:
+        for x, row in enumerate(matrix):
+            for y, cell in enumerate(row):
+                base = 0
+                if y % 2:
+                    base = 3
+                cell[TYPE] = base + x % 3 
     return matrix
 
 def crear_token(matrix:list[list[dict]], x:int, y:int):
@@ -72,7 +80,7 @@ def match_types(matrix:list[list[dict]], x:int, y:int, sentido:str|None = None):
         for pairs in [[-2, -1], [-1, 1], [1, 2]]:
             compare = None
             for distance in pairs:
-                item = safe_index(matrix, x + (direccion[0] * distance), y + (direccion[1] * distance))
+                item = safe_index(matrix, sumar((x, y), mult_escalar(direccion, distance)))
                 if not item:
                     continue
                 if compare and compare[TYPE] == item[TYPE]:
@@ -84,7 +92,7 @@ def match_types(matrix:list[list[dict]], x:int, y:int, sentido:str|None = None):
 def render(tablero:dict, container:pygame.Rect, token_rect:pygame.Rect):
     matrix = tablero[MATRIX]
     layer = tablero["capa"]
-    graphics.addLayer(layer, True)
+    graphics.addLayer(layer, container)
     set_as_busy(tablero, tablero[ANIM_SPEED])
     for x in range(len(matrix)):
         for y in range(len(matrix[x])):
@@ -116,6 +124,7 @@ def primer_render_token(tablero:dict, x:int, y:int, layer:list, container:pygame
     animations.move_token(token[GRAPHIC], (token[GRAPHIC][1].x, pos_y), tablero[ANIM_SPEED])
 
 def select(tablero:dict, token:dict):
+    tablero[ULTIMO_CLICK] = time.time()
     x = token[POSITION][0]
     y = token[POSITION][1]
     matrix:list[list[dict]] = tablero[MATRIX]
@@ -125,12 +134,16 @@ def select(tablero:dict, token:dict):
         case t.IDLE | t.SELECT:
             reset(matrix)
             token[STATE] = t.SELECT
-            for item in cardinals(matrix, x, y):
+            for item in cardinals(matrix, (x, y)):
                 if item[STATE] == t.IDLE:
                     item[STATE] = t.HIGHLIGHT
         case t.HIGHLIGHT:
-            try_switch(tablero, x, y)
-            reset(matrix)
+            if not get_selected(matrix):
+                token[STATE] = t.IDLE
+                select(tablero, token)
+            else:
+                try_switch(tablero, x, y)
+                reset(matrix)
     
 def reset(matrix:list[list[dict]], resetTo:str = t.IDLE):
     for row in matrix:
@@ -187,7 +200,7 @@ def fill_empty(tablero:dict, layer:list, container:pygame.Rect, token_rect:pygam
     changes = False
     for y in range(len(matrix[0])):
         for x in range(len(matrix)):
-            if not safe_index(matrix,x, y):
+            if not safe_index(matrix, (x, y)):
                 changes = True
                 replacement = fall_replace(matrix, x, y)
                 if replacement:
@@ -206,7 +219,7 @@ def fill_empty(tablero:dict, layer:list, container:pygame.Rect, token_rect:pygam
 def fall_replace(matrix:list[list[dict]], x:int, y:int) -> dict|None:
     y += 1
     if in_bound(matrix, (x, y)):
-        replacement = safe_index(matrix, x, y)
+        replacement = safe_index(matrix, (x, y))
         if replacement:
             return replacement
         else:
@@ -219,15 +232,14 @@ def buscar_matches(tablero:dict):
         return
     matrix:list[list[dict]] = tablero[MATRIX]
     for x in range(len(matrix)):
-        matching = find_matching(matrix, x, 0, C_UP)
+        matching = buscar(matrix, x, 0, C_UP, buscar_3)
         if len(matching) > 2:
             break
     if len(matching) < 3:
         for y in range(len(matrix[0])):
-            matching = find_matching(matrix, 0, y, C_RIGHT)
+            matching = buscar(matrix, 0, y, C_RIGHT, buscar_3)
             if len(matching) > 2:
                 break
-            
     if len(matching) > 2:
         score(tablero, matching)
         destroy(tablero, matching)
@@ -258,7 +270,7 @@ def resolver_super(matrix:list[list[dict]], token:dict, line:list[dict]):
                 agregar_super(matrix, x, pos_y(token), line)
                         
 def agregar_super(matrix:list[list[dict]], x:int, y:int, line:list[dict]):
-    target = safe_index(matrix, x, y)
+    target = safe_index(matrix, (x, y))
     if target and target not in line:
         line.append(target)
 
@@ -273,7 +285,7 @@ def agregar_eje_contrario(matrix:list[list[dict]], line:list[dict], es_horizonta
             if es_horizontal:
                 direcciones = [C_DOWN, C_UP]
             for direccion in direcciones:
-                for match in find_matching(matrix, pos_x(token), pos_y(token), direccion, token[TYPE]):
+                for match in buscar(matrix, pos_x(token), pos_y(token), direccion, lambda a,b: comparar_tipo(a, b, token[TYPE])):
                     line.append(match)
 
 def pos_x(token:dict) -> int: 
@@ -288,38 +300,109 @@ def destroy(tablero:dict, scored:list[dict]):
         animations.destroy_token(token[GRAPHIC], tablero[ANIM_SPEED])
         move_to(tablero[MATRIX], None, token[POSITION])
         eventq.quitar_colision(token[COLISION])
+        
+def buscar_jugada(tablero:dict):
+    if tablero[BUSY]:
+        return
+    matrix:list[list[dict]] = tablero[MATRIX]
+    for x in range(len(matrix)):
+        matching = buscar(matrix, x, 0, C_UP, lambda a,b: buscar_posibles(matrix, a, b))
+        if len(matching) > 2:
+            break
+    if len(matching) < 3:
+        for y in range(len(matrix[0])):
+            matching = buscar(matrix, 0, y, C_RIGHT, lambda a,b: buscar_posibles(matrix, a, b))
+            if len(matching) > 2:
+                break
+    return matching
 
-def find_matching(matrix:list[list[dict]], x:int, y:int, move:tuple[int, int], match_type = None):
+def buscar(matrix:list[list[dict]], x:int, y:int, move:tuple[int, int], comparar):
     matching:list[dict] = []
     while in_bound(matrix, (x, y)):
-        token = safe_index(matrix, x, y)
+        token = safe_index(matrix, (x, y))
         if not token:
-            break
-        if match_type:
-            if token[TYPE] == match_type:
-                matching.append(token)
-            else:
+            if len(matching) > 2:
                 break
-        else:
-            if len(matching) == 0:
-                matching.append(token)
             else:
-                if matching[0][TYPE] == token[TYPE]:
-                    matching.append(token)
-                else:
-                    if len(matching) > 2:
-                        break
-                    else:
-                        matching.clear()
-                        matching.append(token)
+                matching.clear()
+        elif not comparar(matching, token):
+            break
         x += move[0]
         y += move[1]
     return matching
-        
-def cardinals(matrix:list[list[dict]], x:int, y:int):
+
+def comparar_tipo(validos:list[dict], token:dict, tipo:int) -> bool:
+    iguales = token[TYPE] == tipo 
+    if iguales:
+        validos.append(token)
+    return iguales
+
+def buscar_3(validos:list[dict], token:dict) -> bool:
+    continuar = True
+    if len(validos) == 0:
+        validos.append(token)
+    else:
+        if validos[0][TYPE] == token[TYPE]:
+            validos.append(token)
+        else:
+            if len(validos) > 2:
+                continuar = False
+            else:
+                validos.clear()
+                validos.append(token)
+    return continuar
+
+def buscar_posibles(matrix:list[list[dict]], validos:list[dict], token:dict) -> bool:
+    validar:list[dict]|None = None
+    pos = token[POSITION]
+    if len(validos) == 0:
+        validos.append(token)
+    else:
+        ref = validos[0]
+        mov = sumar(pos, mult_escalar(ref[POSITION], -1))
+        prox = safe_index(matrix, sumar(pos, mov))
+        if token[TYPE] == ref[TYPE]:
+            validos.append(token)
+            validar = cardinals(matrix, sumar(pos, mov))
+            validar.remove(token)
+            posteriores = cardinals(matrix, sumar(ref[POSITION], mult_escalar(mov, -1)))
+            if posteriores:
+                posteriores.remove(ref)
+                for posterior in posteriores:
+                    validar.append(posterior)
+        elif prox and ref[TYPE] == prox[TYPE]:
+            validar = cardinals(matrix, pos, mov[0] == 1, mov[1] == 1) 
+        else:
+            validos.clear()
+            validos.append(token)
+    if validar:
+        for cardinal in validar:
+            if cardinal[TYPE] == validos[0][TYPE]:
+                validos.append(cardinal)
+                return False
+        validos.clear()
+        validos.append(token)
+    return True
+
+def pos(token:dict) -> tuple[int, int]:
+    return token[POSITION]
+
+def sumar(pos1:tuple[int, int], pos2:tuple[int, int]):
+    return (pos1[0] + pos2[0], pos1[1] + pos2[1])
+
+def mult_escalar(pos:tuple[int, int], escalar:int):
+    return (pos[0] * escalar, pos[1] * escalar)
+             
+def cardinals(matrix:list[list[dict]], xy:tuple[int, int], vertical:bool = False, horizontal:bool = False):
     res:list[dict] = list()
-    for direction in CARDINALS:
-        item = safe_index(matrix, x + direction[0], y + direction[1])
+    directions = CARDINALS
+    if horizontal:
+        directions = [C_LEFT, C_RIGHT]
+    elif vertical:
+        directions = [C_UP, C_DOWN]
+         
+    for direction in directions:
+        item = safe_index(matrix, sumar(xy, direction))
         if item:
             res.append(item)
     return res
@@ -331,8 +414,9 @@ def in_bound(matrix:list[list[dict]], xy:tuple):
         res = xy[1] <(len(row)) and xy[1] >= 0
     return res
 
-def safe_index(matrix:list[list[dict]], x:int, y:int):
+def safe_index(matrix:list[list[dict]], xy:tuple[int, int]):
     item = None
-    if in_bound(matrix, (x, y)):
+    if in_bound(matrix, xy):
+        x, y = xy
         item = matrix[x][y]
     return item

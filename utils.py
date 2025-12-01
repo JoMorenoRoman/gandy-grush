@@ -40,4 +40,3 @@ def max(items:list, access) -> Any:
         if not maximo or valor > maximo:
             maximo = valor
     return maximo
-            

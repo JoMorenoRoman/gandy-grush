@@ -38,7 +38,7 @@ def matrix_align(matrix:list[list[dict]], token:pygame.Rect, x, y, container:pyg
     token.x = container.x + (token.w * x)
     token.y = container.y + (token.h * (len(matrix[0]) - y - 1))
     
-def createGraphic(x_proportion:float, y_proportion:float, ref:pygame.Rect | None = None):
+def createGraphic(x_proportion:float = 1, y_proportion:float = 1, ref:pygame.Rect | None = None):
     if not ref:
         ref = config.screen.get_rect()
     rect = pygame.Rect(0, 0, ref.w * x_proportion, ref.h * y_proportion)
@@ -47,7 +47,7 @@ def createGraphic(x_proportion:float, y_proportion:float, ref:pygame.Rect | None
     rect.centery = ref.centery
     return (surf, rect)
 
-def createRect(x_proportion:float, y_proportion:float, ref:pygame.Rect | None = None):
+def createRect(x_proportion:float = 1, y_proportion:float = 1, ref:pygame.Rect | None = None):
     return createGraphic(x_proportion, y_proportion, ref)[1]
     
 def square(rect:pygame.Rect):
@@ -63,6 +63,7 @@ def make_multiple(rect:pygame.Rect, xMult:int|None, yMult:int|None):
         
     while yMult and rect.height % yMult != 0:
         rect.height -= 1
+    return rect
         
 def construir_limite(borde:float, tercio_x:int, tercio_y:int, ref:pygame.Rect|None = None):
     if not ref:

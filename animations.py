@@ -114,8 +114,24 @@ def titilar(token:tuple[pygame.Surface, pygame.Rect], duracion:float = 0.5, max_
     temp:pygame.Surface = token[0].copy()
     temp.fill((progreso, progreso, progreso), special_flags=pygame.BLEND_RGB_ADD)
     graphics.add_temp((temp, token[1]), estado[LAYER])
-    
     return estado
+
+def opacar(rect:pygame.Rect, duracion:float = 1, max_opaco:int = 255, estado:dict|None = None):
+    if not estado:
+        estado = {
+            DURACION: timer.seconds(duracion),
+            FRAME: 1,
+        }
+        estado[CALLBACK] = lambda: opacar(rect, duracion, max_opaco, estado)
+        animaciones.append(estado)
+    
+    progreso = round(mover_curvo(max_opaco, estado[FRAME], estado[DURACION]))
+    temp = pygame.Surface((rect.w, rect.h))
+    temp.fill((0, 0, 0))
+    temp.set_alpha(progreso)
+    graphics.add_temp((temp, rect), None)
+    return estado
+        
     
 def mover_curvo(final:int, frame_actual:int, frame_final:int):
     progreso = 1 - (frame_actual / frame_final)

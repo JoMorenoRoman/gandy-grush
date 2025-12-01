@@ -4,20 +4,25 @@ import config
 
 _layers:list[list[tuple[pygame.Surface, pygame.Rect]]] = []
 _overlay:list[tuple[pygame.Surface, pygame.Rect]] = []
-_clipped:list[list[tuple[pygame.Surface, pygame.Rect]]] = []
+_clipped:dict[int, pygame.Rect] = {}
 _temps:dict[int,list[tuple[pygame.Surface, pygame.Rect]]] = {}
 _renderers:list[tuple[Any, Any]] = []
 
-def addLayer(layer:list[tuple[pygame.Surface, pygame.Rect]], clipped:bool = False):
+def addLayer(layer:list[tuple[pygame.Surface, pygame.Rect]], clipped:pygame.Rect|None = None):
     _layers.append(layer)
     if clipped:
-        _clipped.append(layer)
+        _clipped[len(_layers) - 1] = clipped
+    return layer
     
 def removeLayer(layer:list[tuple[pygame.Surface, pygame.Rect]]):
     if layer in _layers:
-        _layers.remove(layer)    
-    if layer in _clipped:
-        _clipped.remove(layer)
+        index = _layers.index(layer)
+        _layers.remove(layer)
+        if _clipped.get(index):
+            _clipped.pop(index)
+        for key in sorted(_clipped.keys()):
+            if key > index:
+                _clipped[key - 1] = _clipped[key]
         
 def buscar_capa(grafico:tuple[pygame.Surface, pygame.Rect]):
     index = None
@@ -34,7 +39,10 @@ def removeGraphic(graphic:tuple[pygame.Surface, pygame.Rect]):
             return layer
     return None
             
-def add_temp(grafico:tuple[pygame.Surface, pygame.Rect], capa:int):
+def add_temp(grafico:tuple[pygame.Surface, pygame.Rect], capa:int|None):
+    if not capa:
+        capa = -1
+    
     if _temps.get(capa):
         _temps[capa].append(grafico)
     else:
@@ -64,14 +72,18 @@ def setBackground(background:pygame.Surface):
 def renderizar():
     config.screen.blit(config.background, (0, 0))
     for i, layer in enumerate(_layers):
-        if layer in _clipped:
-            config.screen.set_clip(_layers[i - 1][0][1])
+        clip = _clipped.get(i)  
+        if clip:
+            config.screen.set_clip(clip)
         for (surf, rect) in layer:
             config.screen.blit(surf, rect)
         if _temps.get(i):
             for (surf, rect) in _temps[i]:
                 config.screen.blit(surf, rect)
         config.screen.set_clip(None)
+    if _temps.get(-1):
+        for (surf, rect) in _temps[-1]:
+            config.screen.blit(surf, rect)
     _temps.clear()
     pygame.display.flip()
     
