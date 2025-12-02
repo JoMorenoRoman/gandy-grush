@@ -3,6 +3,7 @@ import config
 import display
 import graphics
 from pantallas import nuevo_record
+from sonido import sonido_puntaje, sonido_puntaje_nivel_2
 import texto
 from utils import guardar_archivo_texto, convertir_csv_a_matriz, leer_archivo_texto
 
@@ -45,11 +46,14 @@ def cambiarPuntaje(puntaje:int):
     grafs.append(tupla)
     estado[PUNTOS] = puntaje
 
-def score(n:int):
+
+def score(n: int, isSuper: bool):
     if n <= 3:
+        sonido_puntaje(isSuper)
         puntaje = n * 15
     else:
-        puntaje = 3 * 15 + (n - 3) * 30
+        sonido_puntaje_nivel_2(isSuper)
+        puntaje = 3 * 20 + (n - 3) * 30
     return puntaje
 
 def tiene_puntaje():

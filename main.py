@@ -2,6 +2,7 @@ import eventq
 import pantallas.inicio
 import ctypes
 
+import sonido
 import texto
 
 try:
@@ -22,6 +23,7 @@ def main():
     
     texto.init()
     pantallas.inicio.iniciar()
+    sonido.init()
     eventq.start()
     pygame.quit()
     sys.exit()

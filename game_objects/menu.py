@@ -7,6 +7,7 @@ import pantallas.inicio
 import pantallas.juego
 import graphics
 
+from sonido import reproducir_musica_de_juego, reproducir_musica_de_menu
 import texto
 from utils import convertir_csv_a_matriz, leer_archivo_texto
 
@@ -60,8 +61,10 @@ def render():
     display.alinear(temps)
     refs = display.encastrar(temps, limite)
     rect = display.crear_container(refs, 0.1)
-    surf = pygame.Surface((rect.w, rect.h))
-    surf.fill(config.MENU_BG)
+    surf = pygame.Surface((rect.w, rect.h), pygame.SRCALPHA)
+    menu_color = (255, 182, 193, 200)
+    surf.fill(menu_color)
+    pygame.draw.rect(surf, menu_color, surf.get_rect(), border_radius=20)
     surf.convert()
     _layer.append((surf, rect))
     graphics.addLayer(_layer)
@@ -83,6 +86,7 @@ def render():
 
 def menu_inicio():
     cerrar()
+    reproducir_musica_de_menu()
     opciones = [
         ("Inicio", lambda: cerrar(pantallas.juego.iniciar)),
         ("Cambiar Resolucion", lambda: cerrar(menu_resoluciones)),

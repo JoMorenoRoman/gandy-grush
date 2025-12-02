@@ -1,6 +1,5 @@
 
 import pygame
-
 import config
 import display
 import eventq

@@ -2,6 +2,7 @@ import math
 import pygame
 import graphics
 import timer
+import random
 
 animaciones:list[dict] = []
 CALLBACK = "callback"
@@ -143,3 +144,4 @@ def mover_lineal(origin:int, dest:int, interval:int):
 
 def reset():
     animaciones.clear()
+
