@@ -16,7 +16,6 @@ except ImportError as err:
 def main():
     print("hello")
     
-    # Initialise screen
     pygame.init()
     pygame.font.init()
     texto.init()
