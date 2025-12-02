@@ -1,3 +1,4 @@
+
 import time
 import pygame
 import config
@@ -7,24 +8,44 @@ import graphics
 import texto
 import timer
 
-estado= {}
+estado = {}
+"""dict: Estado interno del temporizador."""
+
 layer = []
+"""list: Lista de gráficos del temporizador."""
+
 DURACION = "duracion"
 COMIENZO = "comienzo"
 CALLBACK = "callback"
 
-def iniciar(segundos:int, callback):
+def iniciar(segundos: int, callback):
+    """
+    Inicializa el temporizador de la partida.
+
+    Args:
+        segundos (int): Duración total en segundos.
+        callback: Función a ejecutar cuando el tiempo se agote.
+    """
     estado.clear()
     estado[DURACION] = segundos
     estado[COMIENZO] = time.time()
     estado[CALLBACK] = callback
     graphics.addRenderer("reloj", None, clear)
-    
+
 def clear():
+    """
+    Limpia la capa gráfica del temporizador.
+    """
     layer.clear()
     graphics.removeLayer(layer)
-    
-def render(tablero:pygame.Rect):
+
+def render(tablero: pygame.Rect):
+    """
+    Renderiza el temporizador en pantalla.
+
+    Args:
+        tablero (pygame.Rect): Área de referencia para posicionar el reloj.
+    """
     clear()
     graphics.addLayer(layer)
     borde = display.createGraphic(1/9, 1/9, color=config.MAINCOLOR)
@@ -36,16 +57,19 @@ def render(tablero:pygame.Rect):
     layer.append(interior)
     eventq.add_frame_func(texto_reloj, True, timer.seconds(0.1), timer.seconds(0.1))
     texto_reloj()
-        
+
 def texto_reloj():
+    """
+    Actualiza el texto del temporizador en pantalla.
+    """
     if len(layer) == 0:
         return
-    
+
     elapsed = time.time() - estado[COMIENZO]
     remaining = max(0, int(estado[DURACION] - elapsed))
 
     text = f"{remaining:02}"
-    
+
     surf_text, rect_text = texto.subtitulo(text)
     if len(layer) < 3:
         borde = display.createRect(0.9, 0.9, layer[-1][1])
@@ -59,6 +83,6 @@ def texto_reloj():
         rect_text = surf_text.get_rect()
         display.align(rect_text, 1, 1, layer[-2][1])
         layer[-1] = (surf_text, rect_text)
-        
+
     if remaining <= 0:
         estado[CALLBACK]()
