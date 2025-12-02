@@ -10,34 +10,31 @@ import timer
 estado= {}
 layer = []
 DURACION = "duracion"
-CALLBACK = "callback"
 COMIENZO = "comienzo"
+CALLBACK = "callback"
 
-def iniciar(segundos:int, on_timeout):
+def iniciar(segundos:int, callback):
     estado.clear()
     estado[DURACION] = segundos
-    estado[CALLBACK] = on_timeout
     estado[COMIENZO] = time.time()
-    graphics.addRenderer(render, clear)
-    render()
+    estado[CALLBACK] = callback
+    graphics.addRenderer(None, clear)
     
 def clear():
     layer.clear()
     graphics.removeLayer(layer)
     
-def render():
+def render(tablero:pygame.Rect):
     clear()
     graphics.addLayer(layer)
-    limite = display.construir_limite(0.3, 0, 0)
-    borde = display.createGraphic(0.7, 0.7, limite)
-    display.align(borde[1], 1, 1, limite)
-    borde[0].fill(config.MAINCOLOR)
+    borde = display.createGraphic(1/9, 1/9, color=config.MAINCOLOR)
+    pantalla = config.screen.get_rect()
+    display.centrar_entre(borde[1], (pantalla.left, pantalla.centery), (tablero.left, pantalla.centery))
+    display.alinear_en(borde, tablero, posicion=display.PRINCIPIO)
     layer.append(borde)
-    interior = display.createGraphic(1, 1, borde[1].inflate(-10, -10))
-    display.align(interior[1], 0, 0)
-    interior[0].fill(config.BACKGROUND)
+    interior = display.createGraphic(0.95, 0.95, borde[1], color=config.BACKGROUND)
     layer.append(interior)
-    eventq.add_frame_func(texto_reloj, True, timer.seconds(2), timer.seconds(0.3))
+    eventq.add_frame_func(texto_reloj, True, timer.seconds(0.1), timer.seconds(0.1))
     texto_reloj()
         
 def texto_reloj():
@@ -54,7 +51,7 @@ def texto_reloj():
         borde = display.createRect(0.9, 0.9, layer[-1][1])
         tupla = (surf_text, rect_text)
         tupla = display.encastrar([tupla], borde)[0]
-        display.align(tupla[1], 0, 0)
+        display.align(rect_text, 1, 1, layer[-2][1])
         layer.append(tupla)
     else:
         existente = layer[-1]

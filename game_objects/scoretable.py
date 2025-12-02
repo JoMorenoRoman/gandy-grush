@@ -3,7 +3,7 @@ import config
 import display
 import graphics
 from pantallas import nuevo_record
-from sonido import sonido_puntaje, sonido_puntaje_nivel_2
+import sonido
 import texto
 from utils import guardar_archivo_texto, convertir_csv_a_matriz, leer_archivo_texto
 
@@ -13,23 +13,20 @@ REF = "ref"
 POS = "pos"
 PUNTOS = "puntos"
 
-def iniciar(referencia:pygame.Rect):
+def iniciar():
     clear()
     estado.clear()
-    estado[REF] = referencia
     estado[GRAFS] = []
     estado[PUNTOS] = 0
-    graphics.addRenderer(render, clear)
-    render()
+    graphics.addRenderer(None, clear)
 
-def render():
+def render(ref:pygame.Rect):
     clear()
-    ref:pygame.Rect = estado[REF]
     graf = pygame.Rect(0, 0, 10, 10)
     estado[POS] = graf
     graphics.addLayer(estado[GRAFS])
     screen = config.screen.get_rect()
-    display.centrar_entre(graf, (ref.centerx, ref.bottom), (screen.centerx, screen.bottom))
+    display.centrar_entre(graf, (ref.centerx, ref.top), (ref.centerx, screen.top))
     
 def clear():        
     if estado.get(GRAFS, None):
@@ -49,10 +46,10 @@ def cambiarPuntaje(puntaje:int):
 
 def score(n: int, isSuper: bool):
     if n <= 3:
-        sonido_puntaje(isSuper)
+        sonido.sonido_puntaje(isSuper)
         puntaje = n * 15
     else:
-        sonido_puntaje_nivel_2(isSuper)
+        sonido.sonido_puntaje_nivel_2(isSuper)
         puntaje = 3 * 20 + (n - 3) * 30
     return puntaje
 
@@ -76,7 +73,6 @@ def tiene_puntaje():
         if puntos > peor_puntaje:
             entra_al_top_10 = True
 
-    # si NO entra → no pedimos nombre
     return entra_al_top_10
 
 def agregar_puntaje_historico():

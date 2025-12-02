@@ -37,19 +37,16 @@ def clear():
     
 def render():
     clear()
-    if len(colisiones) > 0:
-        for colision in colisiones:
-            eventq.quitar_colision(colision)
-        colisiones.clear()
     opciones = _estado[OPCIONES]
-    limite = display.combinar_limites(display.construir_limite(0.1, 1, 1), display.construir_limite(0.1, 1, 2))
+    limite = display.createGraphic(1, 1, display.createRect(0.5, 0.6))
+    limite = display.alinear_en(limite, display.construir_limite(0, 1, 1), display.PRINCIPIO, 0, display.CENTRO)[1]
     temps = []
     items = []
     titulo = None
     if _estado.get(TITULO, None):
         titulo = texto.subtitulo(_estado[TITULO])
         temps.append(titulo)
-    
+        
     for opcion in opciones:
         text = texto.normal(opcion[0])
         temps.append(text)
@@ -57,12 +54,11 @@ def render():
         
     temps = display.pad(temps, 0.3)
     display.alinear(temps)
-    refs = display.encastrar(temps, limite)
+    refs = display.encastrar(temps, limite, True)
     rect = display.crear_container(refs, 0.1)
     surf = pygame.Surface((rect.w, rect.h), pygame.SRCALPHA)
     menu_color = (255, 182, 193, 200)
     surf.fill(menu_color)
-    pygame.draw.rect(surf, menu_color, surf.get_rect(), border_radius=20)
     surf.convert()
     _layer.append((surf, rect))
     graphics.addLayer(_layer)
@@ -81,14 +77,13 @@ def render():
             else:
                 colisiones.append(eventq.addCollision(graf[1], colision))
                 
-
 def menu_inicio():
     cerrar()
     opciones = [
         ("Inicio", lambda: cerrar(pantallas.juego.iniciar)),
         ("Cambiar Resolucion", lambda: cerrar(menu_resoluciones)),
         ("Puntajes Mas Altos", lambda: cerrar(puntajes_mas_altos)),
-        ("Cerrar Juego", eventq.quit),
+        ("Cerrar Juego", eventq.quit)
     ]
     eventq.clearCollisions()
     iniciar(opciones)
@@ -106,6 +101,7 @@ def puntajes_mas_altos():
     iniciar(opciones)
 
 def menu_resoluciones():
+    cerrar()
     opciones = [
         ("800x600", lambda: display.set_screen(800, 600)),
         ("1200x800", lambda:display.set_screen(1200, 800)),

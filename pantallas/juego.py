@@ -8,6 +8,7 @@ import graphics
 import config
 import game_objects.tokens as tokens
 import game_objects.tablero as tablero
+from pantallas import nuevo_record
 import pantallas.inicio
 import timer
 import sonido
@@ -23,9 +24,16 @@ def iniciar():
     _tablero.clear()
     iniciar_tablero(True, False)
     graphics.addRenderer(render, clear)
-    reloj.iniciar(60, lambda: pantallas.inicio.iniciar())
+    reloj.iniciar(10, fin_partida)
+    scoretable.iniciar()
     boton_pausa.iniciar()
     render()
+    
+def fin_partida():
+    if scoretable.tiene_puntaje():
+        scoretable.agregar_puntaje_historico()
+    else:
+        pantallas.inicio.iniciar()
     
 def iniciar_tablero(reset_fuerte:bool, imposible:bool):
     if _tablero.get(CAPA):
@@ -74,7 +82,8 @@ def render():
     _capas.append(graphics.addLayer([inner]))
     
     render_tablero()
-    scoretable.iniciar(inner[1])
+    scoretable.render(outer[1])
+    reloj.render(outer[1])
 
 def render_tablero():
     clear_tablero()

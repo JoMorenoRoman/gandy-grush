@@ -12,9 +12,9 @@ def set_screen(width:int, height:int):
 def centrar_entre(rect:pygame.Rect, xy1:tuple[int, int]|None, xy2:tuple[int, int]|None):
     screen = config.screen.get_rect()
     if not xy1:
-        xy1 = (screen.x, screen.y)
+        xy1 = (screen.centerx, screen.centery)
     if not xy2:
-        xy2 = (screen.x, screen.y)
+        xy2 = (screen.centerx, screen.centery)
         
     area_width  = xy2[0] - xy1[0]
     area_height = xy2[1] - xy1[1]
@@ -34,18 +34,28 @@ def align(item:pygame.Rect, x_third, y_third, ref:pygame.Rect | None = None):
     item.x = x_pos
     item.y = y_pos
     return item
+
+def centrar(item:tuple[pygame.Surface, pygame.Rect], referencia:pygame.Rect|None = None):
+    if not referencia:
+        referencia = config.screen.get_rect()
+    item[1].centerx = referencia.centerx
+    item[1].centery = referencia.centery
+    return item
     
 def matrix_align(matrix:list[list[dict]], token:pygame.Rect, x, y, container:pygame.Rect):
     token.x = container.x + (token.w * x)
     token.y = container.y + (token.h * (len(matrix[0]) - y - 1))
     
-def createGraphic(x_proportion:float = 1, y_proportion:float = 1, ref:pygame.Rect | None = None):
+def createGraphic(x_proportion:float = 1, y_proportion:float = 1, ref:pygame.Rect | None = None, **kwargs):
     if not ref:
         ref = config.screen.get_rect()
     rect = pygame.Rect(0, 0, ref.w * x_proportion, ref.h * y_proportion)
     surf = pygame.Surface((rect.w, rect.h))
     rect.centerx = ref.centerx
     rect.centery = ref.centery
+    if kwargs and kwargs.get("color"):
+        surf.fill(kwargs["color"])
+    
     return (surf, rect)
 
 def createRect(x_proportion:float = 1, y_proportion:float = 1, ref:pygame.Rect | None = None):
@@ -84,7 +94,7 @@ def combinar_limites(lim1:pygame.Rect, lim2:pygame.Rect):
     alto = max([lim1, lim2], lambda f: f.bottom) - min_y
     return pygame.Rect(min_x, min_y, ancho, alto) # type: ignore
 
-def encastrar(graficos:list[tuple[pygame.Surface, pygame.Rect]], ref:pygame.Rect):
+def encastrar(graficos:list[tuple[pygame.Surface, pygame.Rect]], ref:pygame.Rect, no_expandir:bool = False):
     min_x = min(graficos, lambda f: f[1].x)
     min_y = min(graficos, lambda f: f[1].y)
     ancho = max(graficos, lambda f: f[1].right) - min_x
@@ -94,19 +104,15 @@ def encastrar(graficos:list[tuple[pygame.Surface, pygame.Rect]], ref:pygame.Rect
     escala_alto = ref.height / alto
     
     escala:float = min([escala_ancho, escala_alto], lambda f: f)
+    if no_expandir and escala > 1:
+        escala = 1
     result:dict[int, tuple[pygame.Surface, pygame.Rect]] = {}
     y = ref.top
     for i in range(len(graficos)):
-        graf = graficos[i]
-        rect = graf[1]
-        surf = graf[0]
-        
-        if escala > 1:
-            nuevo_ancho = rect.width
-            nuevo_alto = rect.height
-        else:        
-            nuevo_ancho = int(rect.width  * escala)
-            nuevo_alto = int(rect.height * escala)
+        surf, rect = graficos[i]
+                
+        nuevo_ancho = int(rect.width  * escala)
+        nuevo_alto = int(rect.height * escala)
         nuevo_surf = pygame.transform.smoothscale(surf, (nuevo_ancho, nuevo_alto))
         rel_x = rect.x - min_x
         rel_y = rect.y - min_y
@@ -144,7 +150,33 @@ def pad(items:list[tuple[pygame.Surface, pygame.Rect]], escala:float):
 def alinear(items:list[tuple[pygame.Surface, pygame.Rect]]):
     x = 0
     y = 0
-    for surf, rect in items:
+    for _, rect in items:
         rect.x = x
         rect.y = y
         y += rect.height
+        
+PRINCIPIO = "principio"
+CENTRO = "centro"
+FINAL = "final"
+def alinear_en(grafico:tuple[pygame.Surface, pygame.Rect], ref:pygame.Rect|None, posicion:str|None = None, borde:float|None = None, posicion_horizontal:str|None = None):
+    if not ref:
+        ref = config.screen.get_rect()
+    if borde:
+        borde = round(ref.height * borde)
+    else:
+        borde = 0
+    if posicion:
+        if posicion == PRINCIPIO:
+            grafico[1].top = ref.top + borde
+        elif posicion == CENTRO:
+            grafico[1].centery = ref.centery
+        elif posicion == FINAL:
+            grafico[1].bottom = ref.bottom - borde
+    if posicion_horizontal:
+        if posicion_horizontal == PRINCIPIO:
+            grafico[1].left = ref.left + borde
+        elif posicion_horizontal == CENTRO:
+            grafico[1].centerx = ref.centerx
+        elif posicion_horizontal == FINAL:
+            grafico[1].right = ref.right - borde
+    return grafico
