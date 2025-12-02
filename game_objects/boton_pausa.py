@@ -16,7 +16,7 @@ def iniciar():
 
 def render():
     clear()
-    limite = display.construir_limite(0.25, 2, 0)
+    limite = display.construir_limite(0.3, 2.08, 0.08)
     borde = display.createGraphic(1, 1, limite)
     borde[0].fill(config.MAINCOLOR)
     #display.align(borde[1], 1, 1, limite)
@@ -28,6 +28,7 @@ def render():
     pausa = texto.normal("Pausa")
     pausa = display.encastrar([pausa], interior[1])[0]
     display.align(pausa[1], 1, 1, interior[1])
+    
     capa.append(pausa)
     
     colisiones.append(eventq.addCollision(pausa[1], lambda: game_objects.menu.menu_partida()))

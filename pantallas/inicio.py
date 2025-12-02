@@ -16,9 +16,11 @@ def iniciar():
     
 def render():
     clear()
-    background = pygame.Surface(config.screen.get_size())
-    background = background.convert()
-    background.fill((0, 0, 0))
+    # Load the background image
+    background = pygame.image.load("data/title_background.png")  # Use the path to your image file
+    background = pygame.transform.scale(background, config.screen.get_size())  # Scale to fit screen
+
+    # Set the background
     graphics.setBackground(background)
     font = pygame.font.Font(None, 90)
     text = texto.titulo("Gandy Grush")
@@ -30,4 +32,3 @@ def clear():
     if graficos:
         graphics.removeLayer(graficos)
         graficos.clear()
-    

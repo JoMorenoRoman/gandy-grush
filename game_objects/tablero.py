@@ -7,6 +7,7 @@ import eventq
 from game_objects import scoretable
 import graphics
 import game_objects.tokens as t
+from sonido import sonido_efecto
 
 # TODO: funcs a snake case
 C_LEFT = (-1, 0)
@@ -161,10 +162,12 @@ def try_switch(tablero:dict, x:int, y:int):
     if hay_matches(matrix, [selected, switch_token]):
         set_as_busy(tablero, tablero[ANIM_SPEED])
         animations.switch_tokens(selected[GRAPHIC], switch_token[GRAPHIC], tablero[ANIM_SPEED])
+        sonido_efecto("move")
     else:
         set_as_busy(tablero, 1)
         switch(matrix, selected, switch_token)
         for rejected in [selected, switch_token]:
+            sonido_efecto("wrong_move")
             animations.shake_token(rejected[GRAPHIC])
             
 def get_selected(matrix:list[list[dict]]):
@@ -252,7 +255,7 @@ def score(tablero:dict, line:list[dict]):
         if token[SUPER]:
             super = True
             resolver_super(tablero[MATRIX], token, line)
-    tablero[PUNTAJE] += scoretable.score(len(line))
+    tablero[PUNTAJE] += scoretable.score(len(line), super)
     if not super and len(line) > 2:
         tablero[NEXT_SUPER] = random.randint(0, len(t.SUPERS) -1)
         

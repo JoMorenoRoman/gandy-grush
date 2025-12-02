@@ -10,6 +10,7 @@ import game_objects.tokens as tokens
 import game_objects.tablero as tablero
 import pantallas.inicio
 import timer
+from sonido import reproducir_musica_de_juego
 
 _tablero:dict = {}
 _funcs:list[dict] = []
@@ -17,6 +18,7 @@ _capas:list[list[tuple[pygame.Surface, pygame.Rect]]] = []
 CAPA = "capa"
 
 def iniciar():
+    reproducir_musica_de_juego()
     eventq.full_reset()
     _tablero.clear()
     iniciar_tablero(True, False)
