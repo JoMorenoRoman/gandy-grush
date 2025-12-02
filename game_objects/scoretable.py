@@ -1,3 +1,4 @@
+
 import pygame
 import config
 import display
@@ -7,17 +8,30 @@ import sonido
 import texto
 from utils import guardar_archivo_texto, convertir_csv_a_matriz, leer_archivo_texto
 
-estado:dict = {}
-capa:list[tuple[pygame.Surface, pygame.Rect]] = [] 
+estado: dict = {}
+"""dict: Estado interno del puntaje actual."""
+
+capa: list[tuple[pygame.Surface, pygame.Rect]] = []
+"""list: Lista de gráficos para mostrar el puntaje en pantalla."""
+
 POS = "pos"
 PUNTOS = "puntos"
 
 def iniciar():
+    """
+    Inicializa el sistema de puntaje en la partida.
+    """
     estado.clear()
     estado[PUNTOS] = 0
     graphics.addRenderer("puntaje", None, clear)
 
-def render(ref:pygame.Rect):
+def render(ref: pygame.Rect):
+    """
+    Renderiza el área donde se mostrará el puntaje.
+
+    Args:
+        ref (pygame.Rect): Rectángulo de referencia para posicionar el puntaje.
+    """
     clear()
     graf = display.alinear_en(display.createGraphic(0.01, 0.01), ref, display.PRINCIPIO, 0.2, display.CENTRO)[1]
     screen = config.screen.get_rect()
@@ -25,12 +39,21 @@ def render(ref:pygame.Rect):
     estado[POS] = graf
     graphics.addLayer(capa)
     cambiarPuntaje(0)
-    
-def clear():    
+
+def clear():
+    """
+    Limpia la capa gráfica del puntaje.
+    """
     graphics.removeLayer(capa)
     capa.clear()
-        
-def cambiarPuntaje(puntaje:int):
+
+def cambiarPuntaje(puntaje: int):
+    """
+    Actualiza el puntaje mostrado en pantalla.
+
+    Args:
+        puntaje (int): Nuevo puntaje.
+    """
     estado[PUNTOS] = puntaje
     tupla = texto.normal(str(puntaje))
     tupla[1].centerx = estado[POS].centerx
@@ -39,6 +62,16 @@ def cambiarPuntaje(puntaje:int):
     capa.append(tupla)
 
 def score(n: int, isSuper: bool):
+    """
+    Calcula el puntaje obtenido según la cantidad y tipo de movimiento.
+
+    Args:
+        n (int): Número de elementos eliminados.
+        isSuper (bool): Indica si el movimiento es especial.
+
+    Returns:
+        int: Puntaje calculado.
+    """
     if n <= 3:
         sonido.sonido_puntaje(isSuper)
         puntaje = n * 15
@@ -48,10 +81,16 @@ def score(n: int, isSuper: bool):
     return puntaje
 
 def tiene_puntaje():
+    """
+    Verifica si el puntaje actual entra en el top 10 histórico.
+
+    Returns:
+        bool: True si entra en el top 10, False en caso contrario.
+    """
     puntos = estado.get(PUNTOS, None)
     if not puntos:
         return
-    
+
     if puntos == '0':
         return False
     datos = leer_archivo_texto("puntajes_historicos.csv")
@@ -70,32 +109,52 @@ def tiene_puntaje():
     return entra_al_top_10
 
 def agregar_puntaje_historico():
+    """
+    Inicia la pantalla para agregar un nuevo puntaje histórico.
+    """
     puntos = estado.get(PUNTOS, None)
     if not puntos:
         return
     nuevo_record.iniciar(puntos)
 
-def guardar(nombre:str, puntos:int):
-    # agregamos el nuevo registro
+def guardar(nombre: str, puntos: int):
+    """
+    Guarda un nuevo puntaje histórico en el archivo CSV.
+
+    Args:
+        nombre (str): Nombre del jugador.
+        puntos (int): Puntaje obtenido.
+
+    Returns:
+        bool: True si se guardó correctamente.
+    """
     datos = leer_archivo_texto("puntajes_historicos.csv")
     matriz = convertir_csv_a_matriz(datos)
     matriz.append([nombre, str(puntos)])
     burbujeo_descendente(matriz)
 
-    # recortar top 10
     if len(matriz) > 10:
         matriz = matriz[:10]
 
-    texto = ""
+    texto_csv = ""
     for fila in matriz:
-        texto += fila[0] + "," + fila[1] + "\n"
+        texto_csv += fila[0] + "," + fila[1] + "\n"
 
-    texto = texto.strip()
-    guardar_archivo_texto("puntajes_historicos.csv", texto)
+    texto_csv = texto_csv.strip()
+    guardar_archivo_texto("puntajes_historicos.csv", texto_csv)
 
     return True
 
 def limpiar_matriz(matriz):
+    """
+    Limpia una matriz eliminando filas incompletas o inválidas.
+
+    Args:
+        matriz (list[list]): Matriz original.
+
+    Returns:
+        list[list]: Matriz limpia.
+    """
     matriz_limpia = []
     for fila in matriz:
         if len(fila) < 2:
@@ -107,16 +166,25 @@ def limpiar_matriz(matriz):
         matriz_limpia.append([nombre, puntaje])
     return matriz_limpia
 
-def burbujeo_descendente(matriz:list[list]):
+def burbujeo_descendente(matriz: list[list]):
+    """
+    Ordena la matriz de puntajes en orden descendente usando burbujeo.
+
+    Args:
+        matriz (list[list]): Matriz de puntajes.
+
+    Returns:
+        list[list]: Matriz ordenada.
+    """
     n = len(matriz)
     for i in range(n - 1):
         for j in range(n - 1 - i):
             v1 = matriz[j][1].strip()
             v2 = matriz[j+1][1].strip()
             if v1 == "" or v2 == "":
-                continue 
+                continue
             a = int(v1)
-            b = int(v2)            
+            b = int(v2)
             if a < b:
                 aux = matriz[j]
                 matriz[j] = matriz[j+1]

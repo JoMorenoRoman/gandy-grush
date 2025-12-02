@@ -1,3 +1,4 @@
+
 import pygame
 import config
 import display
@@ -7,7 +8,9 @@ import graphics
 from pantallas import inicio
 import texto
 
-estado:dict = {}
+estado: dict = {}
+"""dict: Estado interno de la pantalla de nuevo récord."""
+
 GRAFS = "grafs"
 TEXT = "text"
 POS = "pos"
@@ -15,15 +18,24 @@ PARAR = "parar"
 PUNTOS = "puntos"
 CALLBACK = "callback"
 
-def iniciar(puntaje:int):
+def iniciar(puntaje: int):
+    """
+    Inicializa la pantalla para ingresar nombre tras obtener un nuevo récord.
+
+    Args:
+        puntaje (int): Puntaje obtenido.
+    """
     eventq.reset()
     estado[PUNTOS] = puntaje
     estado[CALLBACK] = scoretable.guardar
     estado[GRAFS] = []
     render()
     graphics.addRenderer("nuevo record", render, clear)
-    
+
 def clear():
+    """
+    Limpia la pantalla y reinicia el estado gráfico.
+    """
     if estado.get(GRAFS):
         graphics.removeLayer(estado[GRAFS])
         estado[GRAFS].clear()
@@ -31,8 +43,11 @@ def clear():
     estado[PARAR] = False
 
 def render():
+    """
+    Renderiza la pantalla de ingreso de nombre.
+    """
     clear()
-    capa:list[tuple[pygame.Surface, pygame.Rect]] = estado[GRAFS]
+    capa: list[tuple[pygame.Surface, pygame.Rect]] = estado[GRAFS]
     graphics.addLayer(capa)
     fondo = display.createGraphic(2/3, 1/4, color=config.BACKGROUND)
     capa.append(fondo)
@@ -47,6 +62,12 @@ def render():
     eventq.subscribe(escribir, pygame.TEXTINPUT)
 
 def borrar(event):
+    """
+    Maneja la eliminación de texto o confirmación con Enter.
+
+    Args:
+        event (pygame.event.Event): Evento de teclado.
+    """
     if event.key == pygame.K_BACKSPACE:
         estado[TEXT] = estado[TEXT][:-1]
     elif event.key == pygame.K_RETURN:
@@ -54,19 +75,31 @@ def borrar(event):
     render_text()
 
 def escribir(event):
+    """
+    Agrega caracteres al texto ingresado.
+
+    Args:
+        event (pygame.event.Event): Evento de texto.
+    """
     if len(estado[TEXT]) < 12:
         estado[TEXT] += event.text[0:12-len(estado[TEXT])]
     render_text()
-        
+
 def render_text():
+    """
+    Renderiza el texto ingresado en la pantalla.
+    """
     text = estado[TEXT]
     text = texto.subtitulo(text)
     display.alinear_en(text, estado[POS], display.FINAL, 0, display.CENTRO)
     if len(estado[GRAFS]) > 2:
-       estado[GRAFS][-1] = text
+        estado[GRAFS][-1] = text
     else:
-        estado[GRAFS].append(text)   
-        
+        estado[GRAFS].append(text)
+
 def terminar():
+    """
+    Guarda el puntaje y regresa a la pantalla de inicio.
+    """
     scoretable.guardar(estado[TEXT], estado[PUNTOS])
     inicio.iniciar()
