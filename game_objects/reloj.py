@@ -18,7 +18,7 @@ def iniciar(segundos:int, callback):
     estado[DURACION] = segundos
     estado[COMIENZO] = time.time()
     estado[CALLBACK] = callback
-    graphics.addRenderer(None, clear)
+    graphics.addRenderer("reloj", None, clear)
     
 def clear():
     layer.clear()

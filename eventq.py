@@ -25,7 +25,7 @@ def start():
                     collisions = _pausedCollisions
                 else:
                     collisions = _collisions
-                for (box, func) in collisions:
+                for (box, func) in collisions.copy():
                     if box.collidepoint(pygame.mouse.get_pos()):
                         _flags.add(IGNORE_MOUSE)
                         addTimed(0.3, lambda: quitar_bandera(IGNORE_MOUSE), False)

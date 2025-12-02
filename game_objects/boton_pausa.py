@@ -11,7 +11,7 @@ capa:list[tuple[pygame.Surface, pygame.Rect]] = []
 colisiones:list[tuple[pygame.Rect, Any]] = []
 
 def iniciar():
-    graphics.addRenderer(render, clear)
+    graphics.addRenderer("boton pausa", render, clear)
     render()
 
 def render():

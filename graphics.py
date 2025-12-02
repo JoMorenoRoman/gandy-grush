@@ -6,7 +6,7 @@ _layers:list[list[tuple[pygame.Surface, pygame.Rect]]] = []
 _overlay:list[tuple[pygame.Surface, pygame.Rect]] = []
 _clipped:dict[int, pygame.Rect] = {}
 _temps:dict[int,list[tuple[pygame.Surface, pygame.Rect]]] = {}
-_renderers:list[tuple[Any, Any]] = []
+_renderers:dict[str, tuple[Any, Any]] = {}
 
 def addLayer(layer:list[tuple[pygame.Surface, pygame.Rect]], clipped:pygame.Rect|None = None):
     _layers.append(layer)
@@ -53,16 +53,16 @@ def reset():
     _clipped.clear()
     _temps.clear()
     _overlay.clear()
-    for _, clear in _renderers:
+    for _, clear in _renderers.values():
         if clear:
             clear()
     _renderers.clear()
     
-def addRenderer(render, clear):
-    _renderers.append((render, clear))
+def addRenderer(ref, render, clear):
+    _renderers[ref] = (render, clear)
         
 def re_render():
-    for render, _ in _renderers:
+    for render, _ in _renderers.values():
         if render:
             render()
     

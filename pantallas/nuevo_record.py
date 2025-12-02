@@ -21,7 +21,7 @@ def iniciar(puntaje:int):
     estado[CALLBACK] = scoretable.guardar
     estado[GRAFS] = []
     render()
-    graphics.addRenderer(render, clear)
+    graphics.addRenderer("nuevo record", render, clear)
     
 def clear():
     if estado.get(GRAFS):

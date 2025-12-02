@@ -12,7 +12,7 @@ graficos = []
 
 def iniciar():
     eventq.full_reset()
-    graphics.addRenderer(render, clear)
+    graphics.addRenderer("inicio", render, clear)
     render()
     menu.menu_inicio()
     sonido.reproducir_musica(sonido.MUSICA_MENU)

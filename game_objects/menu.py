@@ -25,12 +25,12 @@ def iniciar(options:list[tuple[str, Any]], titulo:str|None = None, paused:bool =
     if titulo:
         _estado[TITULO] = titulo
     _estado[PAUSADO] = paused
-    graphics.addRenderer(render, clear)
+    graphics.addRenderer("menu", render, clear)
     render()
     
 def clear():
-    _layer.clear()
     graphics.removeLayer(_layer)
+    _layer.clear()
     for colision in colisiones:
         eventq.quitar_colision(colision)
     colisiones.clear()
@@ -78,14 +78,12 @@ def render():
                 colisiones.append(eventq.addCollision(graf[1], colision))
                 
 def menu_inicio():
-    cerrar()
     opciones = [
         ("Inicio", lambda: cerrar(pantallas.juego.iniciar)),
         ("Cambiar Resolucion", lambda: cerrar(menu_resoluciones)),
         ("Puntajes Mas Altos", lambda: cerrar(puntajes_mas_altos)),
         ("Cerrar Juego", eventq.quit)
     ]
-    eventq.clearCollisions()
     iniciar(opciones)
 
 def puntajes_mas_altos():
@@ -97,18 +95,16 @@ def puntajes_mas_altos():
         puntaje = row[1]
         text = f"{nombre}: {puntaje}"
         opciones.append((text, None))
-    opciones.append(("volver", menu_inicio))
+    opciones.append(("volver", lambda: cerrar(menu_inicio)))
     iniciar(opciones)
 
 def menu_resoluciones():
-    cerrar()
     opciones = [
         ("800x600", lambda: display.set_screen(800, 600)),
         ("1200x800", lambda:display.set_screen(1200, 800)),
         ("1920x1080", lambda: display.set_screen(1920, 1080)),
-        ("volver", menu_inicio)
+        ("volver", lambda: cerrar(menu_inicio))
     ]
-    eventq.clearCollisions()
     iniciar(opciones)
     
 def menu_partida():
@@ -120,13 +116,9 @@ def menu_partida():
     iniciar(opciones, "Pausa", True)
     
 def cerrar(followup = None):
-    if _estado.get(PAUSADO, None):
+    if _estado.get(PAUSADO):
         eventq.clear_paused_collisions()
+    clear()
     _estado.clear()
-    graphics.removeLayer(_layer)
-    _layer.clear()
-    for colision in colisiones:
-        eventq.quitar_colision(colision)
-    colisiones.clear()
     if followup:
         followup()

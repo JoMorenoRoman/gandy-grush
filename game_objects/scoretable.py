@@ -8,41 +8,35 @@ import texto
 from utils import guardar_archivo_texto, convertir_csv_a_matriz, leer_archivo_texto
 
 estado:dict = {}
-GRAFS = "grafs"
-REF = "ref"
+capa:list[tuple[pygame.Surface, pygame.Rect]] = [] 
 POS = "pos"
 PUNTOS = "puntos"
 
 def iniciar():
-    clear()
     estado.clear()
-    estado[GRAFS] = []
     estado[PUNTOS] = 0
-    graphics.addRenderer(None, clear)
+    graphics.addRenderer("puntaje", None, clear)
 
 def render(ref:pygame.Rect):
     clear()
-    graf = pygame.Rect(0, 0, 10, 10)
-    estado[POS] = graf
-    graphics.addLayer(estado[GRAFS])
+    graf = display.alinear_en(display.createGraphic(0.01, 0.01), ref, display.PRINCIPIO, 0.2, display.CENTRO)[1]
     screen = config.screen.get_rect()
-    display.centrar_entre(graf, (ref.centerx, ref.top), (ref.centerx, screen.top))
+    display.centrar_entre(graf, (ref.centerx, ref.bottom), (screen.centerx, screen.bottom))
+    estado[POS] = graf
+    graphics.addLayer(capa)
+    cambiarPuntaje(0)
     
-def clear():        
-    if estado.get(GRAFS, None):
-        graphics.removeLayer(estado[GRAFS])
+def clear():    
+    graphics.removeLayer(capa)
+    capa.clear()
         
 def cambiarPuntaje(puntaje:int):
+    estado[PUNTOS] = puntaje
     tupla = texto.normal(str(puntaje))
     tupla[1].centerx = estado[POS].centerx
     tupla[1].centery = estado[POS].centery
-    grafs = estado[GRAFS]
-    if len(grafs) > 0:
-        graphics.removeGraphic(grafs[-1])
-        grafs.clear()
-    grafs.append(tupla)
-    estado[PUNTOS] = puntaje
-
+    capa.clear()
+    capa.append(tupla)
 
 def score(n: int, isSuper: bool):
     if n <= 3:
