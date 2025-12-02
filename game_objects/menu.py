@@ -75,7 +75,6 @@ def render():
     clear()
     opciones = _estado[OPCIONES]
 
-    # Área base del menú centrado
     limite = display.createGraphic(1, 1, display.createRect(0.5, 0.6))
     limite = display.alinear_en(limite, display.construir_limite(0, 1, 1), display.PRINCIPIO, 0, display.CENTRO)[1]
 
@@ -83,26 +82,21 @@ def render():
     items = []
     titulo = None
 
-    # Título opcional
     if _estado.get(TITULO, None):
         titulo = texto.subtitulo(_estado[TITULO])
         temps.append(titulo)
 
-    # Construcción de opciones (texto)
     for opcion in opciones:
         text = texto.normal(opcion[0])
         temps.append(text)
         items.append(text)
 
-    # Duplicamos con padding y alineamos verticalmente
     temps = display.pad(temps, 0.3)
     display.alinear(temps)
 
-    # Encastramos dentro del límite y construimos contenedor
     refs = display.encastrar(temps, limite, True)
     rect = display.crear_container(refs, 0.1)
 
-    # Fondo semitransparente del menú
     surf = pygame.Surface((rect.w, rect.h), pygame.SRCALPHA)
     menu_color = (255, 182, 193, 200)
     surf.fill(menu_color)
@@ -110,11 +104,9 @@ def render():
     _layer.append((surf, rect))
     graphics.addLayer(_layer)
 
-    # Agregar título si está presente
     if titulo:
         _layer.append(refs[0])
 
-    # Agregar cada opción y su colisión asociada
     for i in range(len(opciones)):
         opcion = opciones[i]
         graf = refs[temps.index(items[i])]

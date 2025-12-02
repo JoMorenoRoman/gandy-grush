@@ -219,7 +219,7 @@ def combinar_limites(lim1: pygame.Rect, lim2: pygame.Rect):
     min_y = min([lim1, lim2], lambda f: f.y)
     ancho = max([lim1, lim2], lambda f: f.right) - min_x
     alto = max([lim1, lim2], lambda f: f.bottom) - min_y
-    return pygame.Rect(min_x, min_y, ancho, alto)  # type: ignore
+    return pygame.Rect(min_x, min_y, ancho, alto)
 
 
 def encastrar(graficos: list[tuple[pygame.Surface, pygame.Rect]], ref: pygame.Rect, no_expandir: bool = False):
