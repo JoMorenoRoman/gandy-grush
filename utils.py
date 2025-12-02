@@ -1,5 +1,14 @@
 from typing import Any
 
+"""
+Manejo de archivos de texto y transformación de datos CSV.
+
+Este módulo incluye funciones para:
+- Guardar y leer archivos de texto.
+- Convertir contenido CSV a una matriz.
+- Calcular mínimos y máximos en colecciones usando funciones.
+"""
+
 def guardar_archivo_texto(ruta:str, datos:str)-> None:
     archivo = open(ruta,"w")
     archivo.write(datos)
