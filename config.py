@@ -22,6 +22,12 @@ ROWS = 8
 COLUMNS = 8
 """int: Número de columnas en la grilla principal."""
 
+SUPER_THRESHOLD = 4
+"""A partir de cuantas fichas se deberia crear un superpoder."""
+
+TIEMPO = 60
+"""CUanto deberia durar la partida."""
+
 framerate: int = 60
 """int: Tasa de fotogramas por segundo (FPS)."""
 

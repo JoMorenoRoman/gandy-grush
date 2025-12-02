@@ -81,8 +81,9 @@ def escribir(event):
     Args:
         event (pygame.event.Event): Evento de texto.
     """
-    if len(estado[TEXT]) < 12:
-        estado[TEXT] += event.text[0:12-len(estado[TEXT])]
+    for char in event.text:
+        if char.isalnum() and len(estado[TEXT]) < 12:
+            estado[TEXT] += char
     render_text()
 
 def render_text():
