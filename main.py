@@ -19,11 +19,11 @@ def main():
     # Initialise screen
     pygame.init()
     pygame.font.init()
+    texto.init()
+    sonido.init()
     pygame.display.set_caption("Grandy Grush")
     
-    texto.init()
     pantallas.inicio.iniciar()
-    sonido.init()
     eventq.start()
     pygame.quit()
     sys.exit()

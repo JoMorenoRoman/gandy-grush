@@ -1,13 +1,11 @@
 from typing import Any
 import pygame
 import eventq
-import config
 import display
 import pantallas.inicio
 import pantallas.juego
 import graphics
 
-from sonido import reproducir_musica_de_juego, reproducir_musica_de_menu
 import texto
 from utils import convertir_csv_a_matriz, leer_archivo_texto
 
@@ -86,7 +84,6 @@ def render():
 
 def menu_inicio():
     cerrar()
-    reproducir_musica_de_menu()
     opciones = [
         ("Inicio", lambda: cerrar(pantallas.juego.iniciar)),
         ("Cambiar Resolucion", lambda: cerrar(menu_resoluciones)),

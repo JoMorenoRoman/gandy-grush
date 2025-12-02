@@ -33,6 +33,7 @@ def align(item:pygame.Rect, x_third, y_third, ref:pygame.Rect | None = None):
     y_pos -= item.height / 2
     item.x = x_pos
     item.y = y_pos
+    return item
     
 def matrix_align(matrix:list[list[dict]], token:pygame.Rect, x, y, container:pygame.Rect):
     token.x = container.x + (token.w * x)

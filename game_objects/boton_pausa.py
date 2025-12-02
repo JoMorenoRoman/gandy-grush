@@ -16,7 +16,7 @@ def iniciar():
 
 def render():
     clear()
-    limite = display.construir_limite(0.3, 2.08, 0.08)
+    limite = display.construir_limite(0.3, 2, 0)
     borde = display.createGraphic(1, 1, limite)
     borde[0].fill(config.MAINCOLOR)
     #display.align(borde[1], 1, 1, limite)

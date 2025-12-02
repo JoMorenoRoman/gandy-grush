@@ -7,7 +7,7 @@ import eventq
 from game_objects import scoretable
 import graphics
 import game_objects.tokens as t
-from sonido import sonido_efecto
+import sonido
 
 # TODO: funcs a snake case
 C_LEFT = (-1, 0)
@@ -162,12 +162,12 @@ def try_switch(tablero:dict, x:int, y:int):
     if hay_matches(matrix, [selected, switch_token]):
         set_as_busy(tablero, tablero[ANIM_SPEED])
         animations.switch_tokens(selected[GRAPHIC], switch_token[GRAPHIC], tablero[ANIM_SPEED])
-        sonido_efecto("move")
+        sonido.reproducir_sonido(sonido.MOVER)
     else:
         set_as_busy(tablero, 1)
         switch(matrix, selected, switch_token)
         for rejected in [selected, switch_token]:
-            sonido_efecto("wrong_move")
+            sonido.reproducir_sonido(sonido.MOVER_MAL)
             animations.shake_token(rejected[GRAPHIC])
             
 def get_selected(matrix:list[list[dict]]):
