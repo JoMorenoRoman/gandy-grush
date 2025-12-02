@@ -112,7 +112,7 @@ def primer_render_token(tablero:dict, x:int, y:int, layer:list, container:pygame
     token = matrix[x][y]
     rect = token_rect.copy()
     display.matrix_align(matrix, rect, x, y, container)
-    if tablero.get(NEXT_SUPER, None):
+    if tablero.get(NEXT_SUPER, None) is not None:
         token[SUPER] = t.SUPERS[tablero[NEXT_SUPER]]
         tablero[NEXT_SUPER] = None
     color = t.graficar_token(token[TYPE], token[SUPER])
@@ -279,7 +279,7 @@ def agregar_super(matrix:list[list[dict]], x:int, y:int, line:list[dict]):
 
 def agregar_eje_contrario(matrix:list[list[dict]], line:list[dict], es_horizontal:bool):
     sentido = SENTIDO_H
-    if es_horizontal:
+    if es_horizontal: 
         sentido = SENTIDO_V
     for token in line.copy():
         types = match_types(matrix, pos_x(token), pos_y(token), sentido)
