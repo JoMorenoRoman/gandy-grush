@@ -49,3 +49,8 @@ def max(items:list, access) -> Any:
         if not maximo or valor > maximo:
             maximo = valor
     return maximo
+
+def first(items:list, evaluate) -> Any:
+    for item in items:
+        if evaluate(item):
+            return item

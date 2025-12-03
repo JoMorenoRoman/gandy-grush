@@ -6,7 +6,7 @@ import graphics
 from pantallas import nuevo_record
 import sonido
 import texto
-from utils import guardar_archivo_texto, convertir_csv_a_matriz, leer_archivo_texto
+from utils import first, guardar_archivo_texto, convertir_csv_a_matriz, leer_archivo_texto
 
 estado: dict = {}
 """dict: Estado interno del puntaje actual."""
@@ -130,6 +130,11 @@ def guardar(nombre: str, puntos: int):
     """
     datos = leer_archivo_texto("puntajes_historicos.csv")
     matriz = convertir_csv_a_matriz(datos)
+    mismo_nombre = first(matriz, lambda x: x[0] == nombre)
+    if int(mismo_nombre[1]) > puntos:
+        return
+    else:
+        matriz.remove(mismo_nombre)
     matriz.append([nombre, str(puntos)])
     burbujeo_descendente(matriz)
 
