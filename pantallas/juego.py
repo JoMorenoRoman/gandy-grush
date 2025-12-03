@@ -73,6 +73,7 @@ def clear():
     if _capas:
         for capa in _capas:
             graphics.removeLayer(capa)
+        _capas.clear()
     clear_tablero()
     
 
